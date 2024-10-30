@@ -8,16 +8,16 @@ import { AppAuthSetup } from "./AppAuthSetup";
 import { SmsAuthSetup } from "./SmsAuthSetup";
 import { BackupCodes } from "./BackupCodes";
 import { Shield, Smartphone, QrCode, Key } from "lucide-react";
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogCancel,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-// } from "../../ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../ui/alert-dialog";
 
 export function TwoFactorSetup() {
   const [showDisableDialog, setShowDisableDialog] = useState(false);
@@ -108,7 +108,7 @@ export function TwoFactorSetup() {
         </Card>
       )}
 
-      {/* <AlertDialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
+      <AlertDialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
@@ -130,7 +130,7 @@ export function TwoFactorSetup() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog> */}
+      </AlertDialog>
     </div>
   );
 }

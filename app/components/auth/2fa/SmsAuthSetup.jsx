@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { Button } from "../../ui/button";
-// import { Alert, AlertDescription } from "../../ui/alert";
+import { Alert, AlertDescription } from "../../ui/alert";
 import { Phone } from "lucide-react";
 
 export function SmsAuthSetup() {
@@ -37,12 +37,12 @@ export function SmsAuthSetup() {
 
   return (
     <div className="space-y-6 py-4">
-      {/* <Alert>
+      <Alert>
         <Phone className="h-4 w-4" />
         <AlertDescription>
           Standard message and data rates may apply.
         </AlertDescription>
-      </Alert> */}
+      </Alert>
 
       <div className="space-y-4">
         <div className="grid gap-2">
