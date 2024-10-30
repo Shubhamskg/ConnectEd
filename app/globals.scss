@@ -100,7 +100,8 @@
   @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
 }
 
-/* Hover Animations */
+/* Hover Animations he*/
+
 .hover-scale {
   @apply transition-transform duration-300 ease-in-out;
   &:hover {
