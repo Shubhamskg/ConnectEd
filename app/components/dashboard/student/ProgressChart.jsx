@@ -1,4 +1,5 @@
 // components/dashboard/student/ProgressChart.jsx
+"use client"
 import {
     LineChart,
     Line,

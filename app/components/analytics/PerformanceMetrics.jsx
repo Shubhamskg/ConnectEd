@@ -1,4 +1,5 @@
 // components/analytics/PerformanceMetrics.jsx
+"use client"
 import {
     BarChart,
     Bar,

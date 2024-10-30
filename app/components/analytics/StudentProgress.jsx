@@ -1,5 +1,6 @@
 // components/analytics/StudentProgress.jsx
 import { Progress } from "../ui/progress";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 
 export function StudentProgress() {
   const students = [

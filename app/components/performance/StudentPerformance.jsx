@@ -86,7 +86,6 @@ export function StudentPerformance({ studentId }) {
             Export Report
           </Button>
         </div>
-
         <TabsContent value="grades">
           <GradesChart />
         </TabsContent>

@@ -1,4 +1,5 @@
-// app/dashboard/student/performance/page.js
+// File: /app/dashboard/student/performance/page.js
+
 import { StudentPerformance } from "@/app/components/performance/StudentPerformance";
 
 export default function MyPerformancePage() {

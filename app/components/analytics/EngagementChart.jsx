@@ -1,4 +1,5 @@
 // components/analytics/EngagementChart.jsx
+"use client"
 import {
     LineChart,
     Line,

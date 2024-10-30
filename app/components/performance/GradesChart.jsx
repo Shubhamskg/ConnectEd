@@ -1,4 +1,5 @@
 // components/performance/GradesChart.jsx
+"use client"
 import {
     LineChart,
     Line,

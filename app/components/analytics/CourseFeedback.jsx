@@ -1,5 +1,7 @@
 // components/analytics/CourseFeedback.jsx
 // import { StarRating } from "./StarRating";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Star } from "lucide-react";
 function StarRating({ rating }) {
   return (
     <div className="flex items-center">

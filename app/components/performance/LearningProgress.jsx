@@ -1,4 +1,5 @@
 // components/performance/LearningProgress.jsx
+"use client"
 import {
     BarChart,
     Bar,
@@ -10,6 +11,7 @@ import {
     ResponsiveContainer,
   } from "recharts";
   import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+  import { Progress } from "../ui/progress";
   
   export function LearningProgress() {
     const progressData = [

@@ -1,4 +1,5 @@
 // components/assignments/AssignmentStats.jsx
+"use client"
 import {
     LineChart,
     Line,

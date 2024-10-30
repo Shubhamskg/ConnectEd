@@ -1,4 +1,5 @@
 // components/performance/SkillProgress.jsx
+"use client"
 import { Progress } from "../ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
