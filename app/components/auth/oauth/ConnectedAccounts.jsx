@@ -108,7 +108,7 @@ export function ConnectedAccounts() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-background rounded-full">
-                  <account.icon className="h-6 w-6" />
+                  {/* <account.icon className="h-6 w-6" /> */}
                 </div>
                 <div>
                   <CardTitle>{account.name}</CardTitle>
