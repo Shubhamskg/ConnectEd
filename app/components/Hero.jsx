@@ -1,9 +1,13 @@
 // components/Hero.jsx
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Badge } from "./ui/badge";
+"use client"
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Badge } from "@/app/components/ui/badge";
 import {
-  Search,
+  MessageSquarePlus,
   GraduationCap,
   Users,
   Globe,
@@ -11,87 +15,87 @@ import {
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
 
 export function Hero() {
   const stats = [
-    { label: "Active Learners", value: "50K+" },
-    { label: "Expert Teachers", value: "1,200+" },
-    { label: "Online Courses", value: "2,500+" },
+    { label: "Active Learners", value: "500+" },
+    { label: "Expert Teachers", value: "50+" },
+    { label: "Online Courses", value: "100+" },
     { label: "Success Rate", value: "95%" },
   ];
 
   const popularTopics = [
-    "Web Development",
-    "Data Science",
-    "Digital Marketing",
-    "Business",
-    "Design",
+    "Teeth Whitening",
+    "Restorative Dentistry",
+    "Dental Nursing",
   ];
 
   const features = [
     {
       icon: GraduationCap,
-      title: "Expert-Led Learning",
-      description: "Learn from industry professionals",
+      title: "CPD Accredited",
+      description: "Each hour counts towards your CPD requirements",
     },
     {
       icon: Users,
-      title: "Interactive Community",
-      description: "Collaborate with peer learners",
+      title: "Expert-Led Learning",
+      description: "Learn from dental professionals",
     },
     {
       icon: Globe,
-      title: "Global Access",
-      description: "Learn anytime, anywhere",
+      title: "Flexible Learning",
+      description: "Access courses anytime, anywhere",
     },
   ];
 
   return (
-    <div className="relative">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+    <div className="relative overflow-hidden">
+      {/* Background gradient effects */}
+      <div 
+        className="absolute top-0 left-0 w-1/3 h-1/3 bg-primary/10 rounded-full filter blur-3xl opacity-30"
+        aria-hidden="true"
+      />
+      <div 
+        className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-secondary/10 rounded-full filter blur-3xl opacity-30"
+        aria-hidden="true"
+      />
 
-      {/* Main Hero Section */}
+      {/* Main content */}
       <div className="relative">
         <div className="container px-4 py-16 md:py-24 mx-auto">
           {/* Top Badge */}
           <div className="flex justify-center mb-8">
-            <Badge
-              variant="secondary"
-              className="px-4 py-1 text-sm bg-secondary/50 hover:bg-secondary/60"
-            >
-              🎉 Join over 50,000 learners worldwide
+            <Badge variant="secondary" className="px-4 py-1 text-sm font-medium">
+              🎓 Join our growing community of dental professionals
             </Badge>
           </div>
 
-          {/* Main Content */}
+          {/* Main heading section */}
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              Transform Your Future with{" "}
-              <span className="text-primary">Expert-Led</span> Learning
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
+              Transforming the way you learn online
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Access world-class education from anywhere. Learn at your own pace
-              and achieve your goals with our comprehensive online courses.
+              Learn at your own pace and gain new skills with different online courses
             </p>
 
-            {/* Search and CTA */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            {/* Search/Request section */}
+            <form className="flex flex-col sm:flex-row gap-4 justify-center mb-8"
+                  onSubmit={(e) => e.preventDefault()}>
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <MessageSquarePlus className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search for courses..."
+                  placeholder="What do you want to teach or learn?"
                   className="pl-10 h-12"
                 />
               </div>
-              <Button size="lg" className="h-12">
-                Start Learning
+              <Button type="submit" size="lg" className="h-12">
+                Submit Request
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </div>
+            </form>
 
-            {/* Popular Topics */}
+            {/* Popular topics */}
             <div className="flex flex-wrap justify-center gap-2 mb-12">
               <span className="text-sm text-muted-foreground">
                 Popular Topics:
@@ -100,14 +104,14 @@ export function Hero() {
                 <Link
                   key={topic}
                   href={`/courses?topic=${topic.toLowerCase().replace(" ", "-")}`}
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"
                 >
                   {topic}
                 </Link>
               ))}
             </div>
 
-            {/* Stats */}
+            {/* Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
@@ -122,7 +126,7 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Features Grid */}
+          {/* Features grid */}
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {features.map((feature) => (
               <div
@@ -136,39 +140,38 @@ export function Hero() {
             ))}
           </div>
 
-          {/* Trust Section */}
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
+          {/* CTA Button */}
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="mx-auto flex items-center hover:bg-primary/5 transition-colors"
+          >
+            <PlayCircle className="h-5 w-5 mr-2" />
+            How ConnectEd Works
+          </Button>
+
+          {/* Trust indicators */}
+          <div className="mt-16 text-center">
+            <div className="flex items-center justify-center gap-2 mb-6">
               <CheckCircle className="text-green-500 h-5 w-5" />
               <span className="text-muted-foreground">
-                Trusted by leading companies worldwide
+                Trusted by leading dental professionals
               </span>
             </div>
-            <div className="flex flex-wrap justify-center gap-8 opacity-50">
-              {/* Replace with actual company logos */}
-              {[1, 2, 3, 4, 5].map((index) => (
+            {/* <div className="flex flex-wrap justify-center gap-8">
+              {[1, 2, 3, 4].map((index) => (
                 <div
                   key={index}
-                  className="h-8 w-24 bg-foreground/10 rounded"
-                />
+                  className="h-12 w-24 bg-muted/30 rounded-lg flex items-center justify-center"
+                  aria-label={`Partner logo ${index}`}
+                >
+                  <span className="text-muted-foreground text-sm">Partner {index}</span>
+                </div>
               ))}
-            </div>
-          </div>
-
-          {/* Demo Video Button */}
-          <div className="absolute bottom-4 right-4">
-            <Button variant="outline" size="lg" className="rounded-full">
-              <PlayCircle className="h-5 w-5 mr-2" />
-              Watch Demo
-            </Button>
+            </div> */}
           </div>
         </div>
       </div>
-
-      {/* Background Gradient Effects */}
-      <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-primary/10 rounded-full filter blur-3xl opacity-30" />
-      <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-secondary/10 rounded-full filter blur-3xl opacity-30" />
     </div>
   );
 }
-

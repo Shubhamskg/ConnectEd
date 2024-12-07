@@ -7,7 +7,6 @@ import {
   TwitterIcon,
   LinkedinIcon,
   InstagramIcon,
-  YoutubeIcon,
   Mail,
 } from 'lucide-react';
 
@@ -17,31 +16,27 @@ export function Footer() {
   const footerLinks = {
     platform: [
       { name: 'About Us', href: '/about' },
-      { name: 'Careers', href: '/careers' },
-      { name: 'Blog', href: '/blog' },
-      { name: 'Press', href: '/press' },
-      { name: 'Impact', href: '/impact' },
+      { name: 'How It Works', href: '/how-it-works' },
+      { name: 'Testimonials', href: '/testimonials' },
+      { name: 'Contact Us', href: '/contact' },
     ],
     teach: [
       { name: 'Become a Teacher', href: '/teach' },
-      { name: 'Teacher Resources', href: '/resources' },
-      { name: 'Teaching Guidelines', href: '/guidelines' },
-      { name: 'Partner Program', href: '/partner-program' },
-      { name: 'Teacher Forum', href: '/forum' },
+      { name: 'Teacher Guidelines', href: '/guidelines' },
+      { name: 'CPD Accreditation', href: '/accreditation' },
+      { name: 'Success Stories', href: '/success-stories' },
     ],
     learn: [
       { name: 'All Courses', href: '/courses' },
-      { name: 'Free Certificates', href: '/certificates' },
+      { name: 'Live Classes', href: '/live-classes' },
       { name: 'Student Support', href: '/support' },
-      { name: 'Success Stories', href: '/success-stories' },
-      { name: 'Scholarships', href: '/scholarships' },
+      { name: 'Request a Course', href: '/request-course' },
     ],
     resources: [
       { name: 'Help Center', href: '/help' },
       { name: 'Terms of Service', href: '/terms' },
       { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Cookie Policy', href: '/cookies' },
-      { name: 'Accessibility', href: '/accessibility' },
+      { name: 'CPD Information', href: '/cpd-info' },
     ],
   };
 
@@ -50,20 +45,19 @@ export function Footer() {
     { icon: TwitterIcon, href: 'https://twitter.com', label: 'Twitter' },
     { icon: LinkedinIcon, href: 'https://linkedin.com', label: 'LinkedIn' },
     { icon: InstagramIcon, href: 'https://instagram.com', label: 'Instagram' },
-    { icon: YoutubeIcon, href: 'https://youtube.com', label: 'YouTube' },
   ];
 
   return (
-    <footer className="w-full bg-background border-t">
+    <footer className="bg-background border-t">
       <div className="container px-4 py-12 mx-auto">
         {/* Newsletter Section */}
         <div className="grid gap-8 lg:grid-cols-2 mb-12 pb-12 border-b">
           <div>
             <h3 className="text-2xl font-bold mb-2">
-              Join our learning community
+              Join our dental learning community
             </h3>
             <p className="text-muted-foreground">
-              Get updates on new courses, teaching tips, and learning resources delivered to your inbox.
+              Get updates on new courses and CPD opportunities
             </p>
           </div>
           <div className="flex gap-2">
@@ -171,11 +165,6 @@ export function Footer() {
                 );
               })}
             </div>
-          </div>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>
-              🌎 Available in multiple languages. Learn from anywhere in the world.
-            </p>
           </div>
         </div>
       </div>

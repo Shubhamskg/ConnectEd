@@ -1,18 +1,28 @@
-// app/page.js
+import { MainLayout } from '@/app/components/MainLayout';
 import { Hero } from '@/app/components/Hero';
-import { Features } from '@/app/components/Features';
+import { FeaturedCourses } from '@/app/components/FeaturedCourses';
 import { LiveClasses } from '@/app/components/LiveClasses';
-import { Navbar } from '@/app/components/Navbar';
-import { Footer } from '@/app/components/Footer';
+import { HowItWorks } from '@/app/components/HowItWorks';
+import { TeacherCTA } from '@/app/components/TeacherCTA';
+import { Pricing } from '@/app/components/Pricing';
+import { FAQ } from '@/app/components/FAQ';
+import { CTASection } from '@/app/components/CTASection';
+import { Newsletter } from '@/app/components/Newsletter';
+import { Stats } from '@/app/components/Stats';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <>
-    <Navbar/>
+    <MainLayout>
       <Hero />
-      <Features />
+      <Stats />
+      <FeaturedCourses />
       <LiveClasses />
-      <Footer/>
-    </>
+      <HowItWorks />
+      <TeacherCTA />
+      <Pricing />
+      <FAQ />
+      <Newsletter />
+      <CTASection />
+    </MainLayout>
   );
 }

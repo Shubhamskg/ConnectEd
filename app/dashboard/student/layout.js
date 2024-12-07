@@ -1,11 +1,19 @@
-// app/dashboard/layout.js
-import { DashboardLayout } from "@/app/components/dashboard/DashboardLayout";
+// app/dashboard/student/layout.js
+import { Navbar } from "@/app/components/Navbar";
+import { Sidebar } from "./sidebar/page";
 
-export default async function DashboardRootLayout({ children, params }) {
-  // Determine userType based on URL or auth state
-  const paramsSlug = await params
-  const userType =  paramsSlug.slug?.[0] === 'teacher' ? 'teacher' : 'student';
-  console.log('User Type:', paramsSlug);
-  
-  return <DashboardLayout userType={'student'}>{children}</DashboardLayout>;
+export default function StudentDashboardLayout({ children }) {
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar/>
+      <div className="flex">
+        
+        
+        <Sidebar />
+        <main className="flex-1 p-8 bg-gray-50/30">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }
