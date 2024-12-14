@@ -1,7 +1,7 @@
 // app/auth/teacher/login/page.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card";
@@ -11,7 +11,7 @@ import { Label } from "@/app/components/ui/label";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
 import { GraduationCap } from "lucide-react";
 
-export default function TeacherLogin() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -48,6 +48,58 @@ export default function TeacherLogin() {
   };
 
   return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {searchParams.get("success") && (
+        <Alert className="mb-4 bg-green-50 text-green-700">
+          <AlertDescription>{searchParams.get("success")}</AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          required
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <Link 
+            href="/auth/teacher/forgot-password"
+            className="text-sm text-[#3b82f6] hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+        <Input
+          id="password"
+          type="password"
+          required
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        />
+      </div>
+      <Button 
+        type="submit" 
+        className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
+        disabled={loading}
+      >
+        {loading ? "Logging in..." : "Log In"}
+      </Button>
+    </form>
+  );
+}
+
+export default function TeacherLogin() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1 flex flex-col items-center">
@@ -61,53 +113,15 @@ export default function TeacherLogin() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {searchParams.get("success") && (
-            <Alert className="mb-4 bg-green-50 text-green-700">
-              <AlertDescription>{searchParams.get("success")}</AlertDescription>
-            </Alert>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+          <Suspense fallback={
+            <div className="space-y-4">
+              <div className="h-10 bg-gray-100 rounded animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded animate-pulse" />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link 
-                  href="/auth/teacher/forgot-password"
-                  className="text-sm text-[#3b82f6] hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Log In"}
-            </Button>
-          </form>
+          }>
+            <LoginForm />
+          </Suspense>
           <div className="mt-4 text-center text-sm">
             Want to start teaching?{" "}
             <Link href="/auth/teacher/signup" className="text-[#3b82f6] hover:underline">
