@@ -14,7 +14,7 @@ export default function HomePage() {
   return (
     <MainLayout>
       <Hero />
-      <Stats />
+      {/* <Stats /> */}
       <FeaturedCourses />
       <LiveClasses />
       <HowItWorks />

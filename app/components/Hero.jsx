@@ -141,23 +141,23 @@ export function Hero() {
           </div>
 
           {/* CTA Button */}
-          <Button 
+          {/* <Button 
             variant="outline" 
             size="lg" 
             className="mx-auto flex items-center hover:bg-primary/5 transition-colors"
           >
             <PlayCircle className="h-5 w-5 mr-2" />
             How ConnectEd Works
-          </Button>
+          </Button> */}
 
           {/* Trust indicators */}
           <div className="mt-16 text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
+            {/* <div className="flex items-center justify-center gap-2 mb-6">
               <CheckCircle className="text-green-500 h-5 w-5" />
               <span className="text-muted-foreground">
                 Trusted by leading dental professionals
               </span>
-            </div>
+            </div> */}
             {/* <div className="flex flex-wrap justify-center gap-8">
               {[1, 2, 3, 4].map((index) => (
                 <div
