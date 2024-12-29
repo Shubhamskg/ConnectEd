@@ -33,7 +33,8 @@ export function FAQ  () {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-16">
+    <div className='bg-gray-50'>
+    <div className="w-full  max-w-4xl mx-auto px-04 py-16">
       <h1 className="text-4xl font-bold text-center text-blue-600 mb-12">
         Frequently Asked Questions
       </h1>
@@ -68,6 +69,7 @@ export function FAQ  () {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };
