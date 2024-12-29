@@ -1,4 +1,4 @@
-// app/auth/teacher/reset-password/page.jsx
+// app/auth/student/reset-password/page.jsx
 "use client";
 
 import { useState, Suspense } from "react";
@@ -43,7 +43,7 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/teacher/reset-password", {
+      const response = await fetch("/api/auth/student/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,7 +60,7 @@ function ResetPasswordForm() {
 
       setSuccess("Password has been reset successfully");
       setTimeout(() => {
-        router.push("/auth/teacher/login?success=Password reset successful. Please login with your new password.");
+        router.push("/auth/student/login?success=Password reset successful. Please login with your new password.");
       }, 2000);
     } catch (err) {
       setError(err.message);
@@ -77,7 +77,7 @@ function ResetPasswordForm() {
         </Alert>
         <div className="text-center">
           <Link
-            href="/auth/teacher/forgot-password"
+            href="/auth/student/forgot-password"
             className="text-[#3b82f6] hover:underline inline-flex items-center"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -134,7 +134,7 @@ function ResetPasswordForm() {
 }
 
 // Main page component
-export default function TeacherResetPassword() {
+export default function StudentResetPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
       <Card className="w-full max-w-lg">
@@ -143,7 +143,7 @@ export default function TeacherResetPassword() {
             <GraduationCap className="h-8 w-8" />
             <span className="text-2xl font-bold">ConnectEd</span>
           </div> */}
-          <CardTitle className="text-2xl">Reset Your Teacher Password</CardTitle>
+          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
           <CardDescription>
             Enter your new password below
           </CardDescription>
