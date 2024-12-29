@@ -73,7 +73,7 @@ export function Hero() {
 
       {/* Main content */}
       <div className="relative">
-        <div className="container px-4 py-16 md:py-24 mx-auto">
+        <div className="container px-4 py-4 md:py-10 mx-auto">
           {/* Top Badge */}
           <div className="flex justify-center mb-12">
             <Badge className="px-6 py-2 text-base font-medium bg-white border-2 border-blue-100 text-blue-600 shadow-sm">
