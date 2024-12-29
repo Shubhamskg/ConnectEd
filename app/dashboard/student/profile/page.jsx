@@ -1,6 +1,6 @@
 // app/dashboard/student/profile/page.jsx
-import { ProfileHeader } from "@/app/components/profile/ProfileHeader";
-import { ProfileTabs } from "@/app/components/profile/ProfileTabs";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileTabs } from "@/components/profile/ProfileTabs";
 
 const studentData = {
   id: 1,

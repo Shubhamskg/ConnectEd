@@ -1,5 +1,5 @@
 // app/students/page.js
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 export default function StudentsPage() {
   return (

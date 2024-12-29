@@ -1,8 +1,8 @@
 // app/dashboard/student/page.jsx
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Progress } from "@/app/components/ui/progress";
-import { RecentActivity } from "@/app/components/dashboard/RecentActivity";
-import { UpcomingDeadlines } from "@/app/components/dashboard/UpcomingDeadlines";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { UpcomingDeadlines } from "@/components/dashboard/UpcomingDeadlines";
 import { BookOpen, GraduationCap, Clock, Star } from "lucide-react";
 
 export default function StudentDashboard() {

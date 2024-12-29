@@ -1,5 +1,5 @@
 "use client"
-import { CourseAnalytics } from "@/app/components/analytics/CourseAnalytics";
+import { CourseAnalytics } from "@/components/analytics/CourseAnalytics";
 
 export default function TeacherDashboard() {
     const courseId = "your_course_id" // Replace with the actual course ID
@@ -11,7 +11,7 @@ export default function TeacherDashboard() {
 // app/dashboard/teacher/analytics/page.jsx
 // "use client";
 
-// import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // import {
 //   BarChart,
 //   LineChart,

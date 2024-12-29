@@ -1,7 +1,7 @@
 // app/api/auth/student/reset-password/route.js
 import { NextResponse } from 'next/server';
-import connectDB from '@/app/lib/db';
-import User from '@/app/lib/models/User';
+import connectDB from '@/lib/db';
+import User from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 

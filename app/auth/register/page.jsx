@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/app/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,9 +10,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/app/components/ui/card";
-import { RegisterForm } from "@/app/components/auth/RegisterForm";
-import { Icons } from "@/app/components/icons";
+} from "@/components/ui/card";
+import { RegisterForm } from "@/components/auth/RegisterForm";
+import { Icons } from "@/components/icons";
 
 export default function RegisterPage() {
   return (

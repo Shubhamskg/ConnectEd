@@ -1,12 +1,12 @@
 // components/notifications/NotificationDropdown.jsx
 import { Bell } from "lucide-react";
-import { Button } from "@/app/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { useNotifications } from "./NotificationContext";
 

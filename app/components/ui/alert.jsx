@@ -2,7 +2,7 @@
 // components/ui/alert.jsx
 import * as React from "react"
 import { cva } from "class-variance-authority"
-import { cn } from "@/app/lib/utils"
+import { cn } from "@/lib/utils"
 import { Info, AlertCircle, CheckCircle, XCircle } from "lucide-react"
 
 const alertVariants = cva(

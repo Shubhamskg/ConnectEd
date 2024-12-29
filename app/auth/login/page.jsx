@@ -1,9 +1,9 @@
 // app/auth/login/page.jsx
 "use client"
 import Link from "next/link";
-import { LoginForm } from "@/app/components/auth/LoginForm";
-import { Button } from "@/app/components/ui/button";
-import { Icons } from "@/app/components/icons";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/icons";
 
 // export const metadata = {
 //   title: "Login | ConnectEd",

@@ -1,5 +1,5 @@
 // app/dashboard/teacher/discussions/page.js
-import { DiscussionBoard } from "@/app/components/discussion/DiscussionBoard";
+import { DiscussionBoard } from "@/components/discussion/DiscussionBoard";
 
 export default function TeacherDiscussionsPage() {
   return (

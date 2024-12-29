@@ -1,5 +1,5 @@
 // app/dashboard/settings/security/two-factor/page.jsx
-import { TwoFactorSetup } from "@/app/components/auth/2fa/TwoFactorSetup";
+import { TwoFactorSetup } from "@/components/auth/2fa/TwoFactorSetup";
 
 export default function TwoFactorPage() {
   return (

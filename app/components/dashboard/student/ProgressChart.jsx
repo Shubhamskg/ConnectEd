@@ -10,7 +10,7 @@ import {
     Legend,
     ResponsiveContainer,
   } from "recharts";
-  import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
   
   const data = [
     { week: "Week 1", hoursSpent: 5, progress: 15, performance: 82 },

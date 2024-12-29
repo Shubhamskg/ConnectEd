@@ -1,8 +1,8 @@
 // app/api/auth/check/route.js
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/app/lib/auth';
-import connectDB from '@/app/lib/db';
-import User from '@/app/lib/models/User';
+import { verifyToken } from '@/lib/auth';
+import connectDB from '@/lib/db';
+import User from '@/lib/models/User';
 
 export async function GET(request) {
   try {

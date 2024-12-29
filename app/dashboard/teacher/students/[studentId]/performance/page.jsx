@@ -1,5 +1,5 @@
 // app/dashboard/teacher/students/[studentId]/performance/page.js
-import { StudentPerformance } from "@/app/components/performance/StudentPerformance";
+import { StudentPerformance } from "@/components/performance/StudentPerformance";
 
 export default function StudentPerformancePage({ params }) {
   return (

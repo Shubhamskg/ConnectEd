@@ -1,9 +1,9 @@
 // app/api/auth/teacher/login/route.js
 import { NextResponse } from 'next/server';
 import { sign } from 'jsonwebtoken';
-import connectDB from '@/app/lib/db';
-import User from '@/app/lib/models/User';
-import Teacher from '@/app/lib/models/Teacher';
+import connectDB from '@/lib/db';
+import User from '@/lib/models/User';
+import Teacher from '@/lib/models/Teacher';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

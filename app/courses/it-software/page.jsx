@@ -2,9 +2,9 @@
 // app/courses/it-software/page.jsx
 "use client";
 
-import { CourseGrid } from "@/app/components/courses/CourseGrid";
-import { CourseFilters } from "@/app/components/courses/CourseFilters";
-import { Badge } from "@/app/components/ui/badge";
+import { CourseGrid } from "@/components/courses/CourseGrid";
+import { CourseFilters } from "@/components/courses/CourseFilters";
+import { Badge } from "@/components/ui/badge";
 
 const itSoftwareCourses = [
   {

@@ -1,8 +1,8 @@
 // app/dashboard/teacher/page.jsx
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Button } from "@/app/components/ui/button";
-import { RecentActivity } from "@/app/components/dashboard/RecentActivity";
-import { UpcomingClasses } from "@/app/components/dashboard/UpcomingClasses";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { UpcomingClasses } from "@/components/dashboard/UpcomingClasses";
 import { Users, BookOpen, Clock, GraduationCap } from "lucide-react";
 
 export default function TeacherDashboard() {

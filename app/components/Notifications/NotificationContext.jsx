@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 const NotificationContext = createContext({});
 

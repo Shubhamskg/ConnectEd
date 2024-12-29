@@ -1,5 +1,5 @@
 // app/teachers/page.js
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 export default function TeachersPage() {
   return (

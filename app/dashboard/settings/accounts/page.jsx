@@ -1,5 +1,5 @@
 // app/dashboard/settings/accounts/page.jsx
-import { ConnectedAccounts } from "@/app/components/auth/oauth/ConnectedAccounts";
+import { ConnectedAccounts } from "@/components/auth/oauth/ConnectedAccounts";
 
 export default function ConnectedAccountsPage() {
   return (

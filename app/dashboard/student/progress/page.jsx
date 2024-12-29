@@ -1,11 +1,11 @@
 // app/dashboard/student/progress/page.jsx
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Progress } from "@/app/components/ui/progress";
-import { Badge } from "@/app/components/ui/badge";
-import { Button } from "@/app/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BookOpen,
   Clock,
@@ -15,9 +15,9 @@ import {
   BarChart,
   Calendar,
 } from "lucide-react";
-import { ProgressChart } from "@/app/components/dashboard/student/ProgressChart";
-import { CourseProgress } from "@/app/components/dashboard/student/CourseProgress";
-import { Achievements } from "@/app/components/dashboard/student/Achievements";
+import { ProgressChart } from "@/components/dashboard/student/ProgressChart";
+import { CourseProgress } from "@/components/dashboard/student/CourseProgress";
+import { Achievements } from "@/components/dashboard/student/Achievements";
 
 export default function StudentProgressPage() {
   const stats = {

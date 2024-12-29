@@ -1,5 +1,5 @@
 // app/dashboard/student/layout.js
-import { Navbar } from "@/app/components/Navbar";
+import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "./sidebar/page";
 
 export default function StudentDashboardLayout({ children }) {

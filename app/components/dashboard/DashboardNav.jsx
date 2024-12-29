@@ -1,6 +1,6 @@
 // components/dashboard/DashboardNav.jsx
 "use client"
-import { cn } from "@/app/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   BookOpen,

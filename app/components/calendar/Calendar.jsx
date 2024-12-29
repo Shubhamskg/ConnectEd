@@ -4,7 +4,7 @@ import { format, startOfToday, eachDayOfInterval, startOfMonth, endOfMonth,
   endOfWeek, startOfWeek, isToday, isSameMonth, isEqual, parse, add, getDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
-import { cn } from '@/app/lib/utils';
+import { cn } from '@/lib/utils';
 
 const colStartClasses = [
   '',

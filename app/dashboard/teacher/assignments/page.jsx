@@ -1,5 +1,5 @@
 // app/dashboard/student/assignments/page.js
-import { AssignmentDashboard } from "@/app/components/assignments/AssignmentDashboard";
+import { AssignmentDashboard } from "@/components/assignments/AssignmentDashboard";
 
 export default function StudentAssignmentsPage() {
   return (

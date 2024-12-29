@@ -1,11 +1,11 @@
 // app/dashboard/student/courses/page.jsx
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Button } from "@/app/components/ui/button";
-import { Progress } from "@/app/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Search } from "lucide-react";
-import { Input } from "@/app/components/ui/input";
+import { Input } from "@/components/ui/input";
 import Image from "next/image";
 
 export default function CoursesPage() {

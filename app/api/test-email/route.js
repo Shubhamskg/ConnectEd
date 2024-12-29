@@ -1,6 +1,6 @@
 // app/api/test-email/route.js
 import { NextResponse } from 'next/server';
-import { testEmailConfiguration } from '@/app/lib/email';
+import { testEmailConfiguration } from '@/lib/email';
 
 export async function GET() {
   const result = await testEmailConfiguration();

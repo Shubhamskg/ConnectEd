@@ -1,8 +1,8 @@
 // app/api/auth/teacher/signup/route.js
 import { NextResponse } from 'next/server';
-import connectDB from '@/app/lib/db';
-import User from '@/app/lib/models/User';
-import Teacher from '@/app/lib/models/Teacher';
+import connectDB from '@/lib/db';
+import User from '@/lib/models/User';
+import Teacher from '@/lib/models/Teacher';
 
 export async function POST(request) {
   try {

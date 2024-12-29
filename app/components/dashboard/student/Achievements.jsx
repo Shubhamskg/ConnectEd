@@ -1,6 +1,6 @@
 // components/dashboard/student/Achievements.jsx
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Badge } from "@/app/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Star, Award } from "lucide-react";
 
 const achievements = [

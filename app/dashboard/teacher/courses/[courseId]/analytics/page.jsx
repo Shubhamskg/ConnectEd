@@ -1,5 +1,5 @@
 // app/dashboard/teacher/courses/[courseId]/analytics/page.js
-import { CourseAnalytics } from "@/app/components/analytics/CourseAnalytics";
+import { CourseAnalytics } from "@/components/analytics/CourseAnalytics";
 
 export default function CourseAnalyticsPage({ params }) {
   return (

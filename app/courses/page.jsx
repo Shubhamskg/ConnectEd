@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { CourseGrid } from "@/app/components/courses/CourseGrid";
-import { CourseFilters } from "@/app/components/courses/CourseFilters";
-import { CourseSearch } from "@/app/components/courses/CourseSearch";
-import { Button } from "@/app/components/ui/button";
+import { CourseGrid } from "@/components/courses/CourseGrid";
+import { CourseFilters } from "@/components/courses/CourseFilters";
+import { CourseSearch } from "@/components/courses/CourseSearch";
+import { Button } from "@/components/ui/button";
 import { Grid, List, SlidersHorizontal } from "lucide-react";
 import {
   Sheet,
@@ -13,7 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/app/components/ui/sheet";
+} from "@/components/ui/sheet";
 
 export default function CoursesPage() {
   const [view, setView] = useState("grid");

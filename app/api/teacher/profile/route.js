@@ -1,8 +1,8 @@
 // app/api/teacher/profile/route.js
 import { NextResponse } from 'next/server';
-import connectDB from '@/app/lib/db';
-import Teacher from '@/app/lib/models/Teacher';
-import { getToken } from '@/app/lib/auth';
+import connectDB from '@/lib/db';
+import Teacher from '@/lib/models/Teacher';
+import { getToken } from '@/lib/auth';
 
 export async function GET(request) {
   try {

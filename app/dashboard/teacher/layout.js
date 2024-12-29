@@ -1,5 +1,5 @@
 // app/dashboard/layout.js
-import { DashboardLayout } from "@/app/components/dashboard/DashboardLayout";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 export default async function DashboardRootLayout({ children, params }) {
   // Determine userType based on URL or auth state

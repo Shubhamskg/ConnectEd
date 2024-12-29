@@ -1,7 +1,7 @@
 // components/dashboard/DashboardLayout.jsx
 import { DashboardNav } from "./DashboardNav";
 import { DashboardHeader } from "./DashboardHeader";
-import { cn } from "@/app/lib/utils";
+import { cn } from "@/lib/utils";
 
 export function DashboardLayout({ children, userType }) {
   return (

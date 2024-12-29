@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/context/AuthContext";
-import { useNotifications } from "@/app/components/Notifications/NotificationContext";
-import { NotificationDropdown } from "@/app/components/Notifications/NotificationDropdown";
+import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/components/Notifications/NotificationContext";
+import { NotificationDropdown } from "@/components/Notifications/NotificationDropdown";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {

@@ -3,8 +3,8 @@ import {
     Avatar,
     AvatarFallback,
     AvatarImage,
-  } from "@/app/components/ui/avatar"
-  import { Button } from "@/app/components/ui/button"
+  } from "@/components/ui/avatar"
+  import { Button } from "@/components/ui/button"
   import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-  } from "@/app/components/ui/dropdown-menu"
+  } from "@/components/ui/dropdown-menu"
   
   export function UserNav({ userType }) {
     const userName = userType === 'teacher' ? 'Sarah Johnson' : 'Alex Chen';
