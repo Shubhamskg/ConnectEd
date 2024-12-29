@@ -37,7 +37,7 @@ export function TeacherCTA() {
             </Link>
           </div>
           <div className="relative">
-            <Card className="bg-white/10 backdrop-blur">
+            <Card className="bg-white backdrop-blur">
               <CardHeader>
                 <h3 className="text-xl font-semibold">No Monthly Fees</h3>
               </CardHeader>

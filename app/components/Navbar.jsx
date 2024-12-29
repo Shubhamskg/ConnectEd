@@ -1,6 +1,4 @@
-// components/Navbar.jsx
-"use client";
-
+"use client"
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,7 +28,6 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  User,
   BookOpen,
   GraduationCap,
   PlusCircle,
@@ -40,9 +37,6 @@ import {
   BarChart,
   Clock,
   Search,
-  Video,
-  Award,
-  Bookmark,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
@@ -64,57 +58,24 @@ export function Navbar() {
 
   const categories = [
     { name: "Dentistry", href: "/courses/dentistry" },
+    { name: "Medical", href: "/courses/medical" },
+    { name: "Nursing", href: "/courses/nursing" },
   ];
 
   const getNavItems = () => {
     if (user?.role === 'teacher') {
       return [
-        { 
-          label: "Dashboard", 
-          icon: Layout, 
-          href: "/dashboard/teacher",
-          badge: "New"
-        },
-        { 
-          label: "My Courses", 
-          icon: BookOpen, 
-          href: "/dashboard/teacher/courses"
-        },
-        { 
-          label: "Students", 
-          icon: GraduationCap, 
-          href: "/dashboard/teacher/students",
-          badge: user?.newStudentsCount > 0 ? `${user.newStudentsCount} new` : null
-        },
-        { 
-          label: "Earnings", 
-          icon: BarChart, 
-          href: "/dashboard/teacher/earnings"
-        },
+        { label: "Dashboard", icon: Layout, href: "/dashboard/teacher" },
+        { label: "My Courses", icon: BookOpen, href: "/dashboard/teacher/courses" },
+        { label: "Students", icon: GraduationCap, href: "/dashboard/teacher/students" },
+        { label: "Earnings", icon: BarChart, href: "/dashboard/teacher/earnings" },
       ];
     }
     return [
-      { 
-        label: "My Learning", 
-        icon: BookOpen, 
-        href: "/dashboard/student"
-      },
-      { 
-        label: "Assignments", 
-        icon: FileText, 
-        href: "/dashboard/student/assignments",
-        badge: user?.pendingAssignmentsCount > 0 ? `${user.pendingAssignmentsCount} due` : null
-      },
-      { 
-        label: "Discussions", 
-        icon: MessageSquare, 
-        href: "/dashboard/student/discussions"
-      },
-      { 
-        label: "Schedule", 
-        icon: Clock, 
-        href: "/dashboard/student/schedule"
-      },
+      { label: "My Learning", icon: BookOpen, href: "/dashboard/student" },
+      { label: "Assignments", icon: FileText, href: "/dashboard/student/assignments" },
+      { label: "Discussions", icon: MessageSquare, href: "/dashboard/student/discussions" },
+      { label: "Schedule", icon: Clock, href: "/dashboard/student/schedule" },
     ];
   };
 
@@ -129,73 +90,46 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60
-        ${isScrolled ? "shadow-sm" : ""}`}
+      className={`sticky top-0 z-50 w-full transition-all duration-200 bg-gray-50 ${
+        isScrolled ? "shadow-sm" : ""
+      }`}
     >
-      {/* Mobile Search Overlay */}
-      {isMobileSearchOpen && (
-        <div className="fixed inset-0 z-50 bg-background/95 p-4">
-          <div className="container mx-auto space-y-4">
-            <div className="flex items-center space-x-2">
-              <Input 
-                placeholder="Search courses..." 
-                className="flex-1"
-                autoFocus
-              />
-              <Button 
-                variant="ghost" 
-                onClick={() => setIsMobileSearchOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Recent Searches
-              </h3>
-              <div className="space-y-1">
-                {['Dental Anatomy', 'Clinical Procedures'].map((search) => (
-                  <Button
-                    key={search}
-                    variant="ghost"
-                    className="w-full justify-start text-sm"
-                  >
-                    <Clock className="h-4 w-4 mr-2" />
-                    {search}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-2xl font-bold text-[#3b82f6]">ConnectEd</span>
+        <Link href="/" className="flex items-center space-x-0">
+          <img 
+            src="/logo2.png" 
+            alt="ConnectEd Logo" 
+            className="h-15 w-16 object-contain"
+          />
+          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+            ConnectEd
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden md:flex items-center space-x-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-1">
-                <span>Categories</span>
-                <ChevronDown className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                <span>Browse</span>
+                <ChevronDown className="h-4 w-4 ml-1" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="start" className="w-64">
               {categories.map((category) => (
-                <DropdownMenuItem key={category.name}>
+                <DropdownMenuItem key={category.name} className="py-2">
                   <Link href={category.href} className="w-full">
                     {category.name}
                   </Link>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link href="/request-category" className="flex items-center w-full">
+              <DropdownMenuItem className="py-2">
+                <Link href="/request-category" className="flex items-center w-full text-blue-600">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Request New Category
                 </Link>
@@ -203,81 +137,89 @@ export function Navbar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" asChild>
-            <Link href="/courses">All Courses</Link>
+          <Button 
+            variant="ghost" 
+            asChild
+            className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
+          >
+            <Link href="/courses">Explore Courses</Link>
           </Button>
 
           {!user && (
-            <Button variant="ghost" asChild>
-              <Link href="/auth/teacher/signup">Become a Teacher</Link>
+            <Button 
+              variant="ghost" 
+              asChild
+              className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              <Link href="/auth/teacher/signup">Teach on ConnectEd</Link>
             </Button>
           )}
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-6">
+          {/* Search */}
+          <div className="hidden md:flex items-center">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-gray-600 hover:text-blue-600"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
+
           {user ? (
             <>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setIsMobileSearchOpen(true)}
-                className="md:hidden"
-              >
-                <Search className="h-5 w-5" />
-              </Button>
-
               <NotificationDropdown />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <Avatar className="h-8 w-8">
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center space-x-2 hover:bg-gray-100/80"
+                  >
+                    <Avatar className="h-8 w-8 ring-2 ring-offset-2 ring-blue-500">
                       <AvatarImage src={user?.avatar} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-blue-500 text-white">
                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel className="p-4">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium">
                         {user?.firstName} {user?.lastName}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-gray-500">
                         {user?.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {getNavItems().map((item) => (
-                    <DropdownMenuItem key={item.label}>
+                    <DropdownMenuItem key={item.label} className="py-2">
                       <Link href={item.href} className="flex items-center w-full">
-                        <item.icon className="h-4 w-4 mr-2" />
-                        <span className="flex-1">{item.label}</span>
-                        {item.badge && (
-                          <Badge variant="secondary" className="ml-2">
-                            {item.badge}
-                          </Badge>
-                        )}
+                        <item.icon className="h-4 w-4 mr-3 text-gray-500" />
+                        <span>{item.label}</span>
                       </Link>
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="py-2">
                     <Link href="/dashboard/settings" className="flex items-center w-full">
-                      <Settings className="h-4 w-4 mr-2" />
+                      <Settings className="h-4 w-4 mr-3 text-gray-500" />
                       Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="text-red-600" 
+                    className="text-red-600 py-2" 
                     onClick={handleLogout}
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
+                    <LogOut className="h-4 w-4 mr-3" />
                     Log Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -285,14 +227,18 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => router.push('/auth/student/login')}>
+              <Button 
+                variant="ghost"
+                className="font-medium text-gray-700 hover:text-blue-600"
+                onClick={() => router.push('/auth/student/login')}
+              >
                 Log In
               </Button>
               <Button 
-                className="bg-[#3b82f6] hover:bg-[#2563eb]"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all"
                 onClick={() => router.push('/auth/student/signup')}
               >
-                Sign Up
+                Get Started
               </Button>
             </>
           )}
@@ -301,20 +247,22 @@ export function Navbar() {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
+                <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
-              <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
+              <SheetHeader className="pb-6">
+                <SheetTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                  ConnectEd
+                </SheetTitle>
               </SheetHeader>
-              <div className="py-4">
+              <div className="space-y-6">
                 {user ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Avatar>
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-blue-500">
                         <AvatarImage src={user?.avatar} />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-blue-500 text-white">
                           {user?.firstName?.[0]}{user?.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
@@ -322,7 +270,7 @@ export function Navbar() {
                         <p className="font-medium">
                           {user?.firstName} {user?.lastName}
                         </p>
-                        <p className="text-sm text-muted-foreground capitalize">
+                        <p className="text-sm text-gray-500 capitalize">
                           {user?.role}
                         </p>
                       </div>
@@ -332,68 +280,60 @@ export function Navbar() {
                         <Button
                           key={item.label}
                           variant="ghost"
-                          className="w-full justify-start"
+                          className="w-full justify-start py-6"
                           asChild
                         >
                           <Link href={item.href}>
-                            <item.icon className="h-4 w-4 mr-2" />
+                            <item.icon className="h-5 w-5 mr-3 text-gray-500" />
                             {item.label}
-                            {item.badge && (
-                              <Badge variant="secondary" className="ml-2">
-                                {item.badge}
-                              </Badge>
-                            )}
                           </Link>
                         </Button>
                       ))}
                     </div>
-                    <div className="border-t pt-4 space-y-1">
+                    <div className="border-t pt-6 space-y-1">
                       <Button
                         variant="ghost"
-                        className="w-full justify-start"
+                        className="w-full justify-start py-6"
                         asChild
                       >
                         <Link href="/dashboard/settings">
-                          <Settings className="h-4 w-4 mr-2" />
+                          <Settings className="h-5 w-5 mr-3 text-gray-500" />
                           Settings
                         </Link>
                       </Button>
                       <Button
                         variant="ghost"
-                        className="w-full justify-start text-red-600"
+                        className="w-full justify-start text-red-600 py-6"
                         onClick={handleLogout}
                       >
-                        <LogOut className="h-4 w-4 mr-2" />
+                        <LogOut className="h-5 w-5 mr-3" />
                         Log Out
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <Link href="/courses/dentistry" className="block py-2">
-                        Dentistry Courses
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Link href="/courses/dentistry" className="block py-3 text-gray-700 hover:text-blue-600">
+                        Browse Courses
                       </Link>
-                      <Link href="/courses" className="block py-2">
-                        All Courses
-                      </Link>
-                      <Link href="/auth/teacher/signup" className="block py-2">
-                        Become a Teacher
+                      <Link href="/auth/teacher/signup" className="block py-3 text-gray-700 hover:text-blue-600">
+                        Teach on ConnectEd
                       </Link>
                     </div>
-                    <div className="border-t pt-4 space-y-2">
+                    <div className="space-y-3">
                       <Button
                         variant="outline"
-                        className="w-full"
+                        className="w-full py-6"
                         onClick={() => router.push('/auth/student/login')}
                       >
                         Log In
                       </Button>
                       <Button
-                        className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
+                        className="w-full bg-blue-600 hover:bg-blue-700 py-6"
                         onClick={() => router.push('/auth/student/signup')}
                       >
-                        Sign Up
+                        Get Started
                       </Button>
                     </div>
                   </div>

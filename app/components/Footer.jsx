@@ -51,7 +51,7 @@ export function Footer() {
     <footer className="bg-background border-t">
       <div className="container px-4 py-12 mx-auto">
         {/* Newsletter Section */}
-        <div className="grid gap-8 lg:grid-cols-2 mb-12 pb-12 border-b">
+        {/* <div className="grid gap-8 lg:grid-cols-2 mb-12 pb-12 border-b">
           <div>
             <h3 className="text-2xl font-bold mb-2">
               Join our dental learning community
@@ -71,7 +71,7 @@ export function Footer() {
               Subscribe
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Main Footer Links */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
@@ -140,11 +140,16 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="pt-8 border-t">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4"><img 
+            src="/logo2.png" 
+            alt="ConnectEd Logo" 
+            className="h-10 w-10 object-contain"
+          />
               <Link href="/" className="font-bold text-xl">
                 ConnectEd
               </Link>
               <span className="text-sm text-muted-foreground">
+                
                 © {currentYear} ConnectEd Learning. All rights reserved.
               </span>
             </div>

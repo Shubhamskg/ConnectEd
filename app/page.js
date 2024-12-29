@@ -15,13 +15,13 @@ export default function HomePage() {
     <MainLayout>
       <Hero />
       {/* <Stats /> */}
-      <FeaturedCourses />
-      <LiveClasses />
+      {/* <FeaturedCourses /> */}
+      {/* <LiveClasses /> */}
       <HowItWorks />
       <TeacherCTA />
       <Pricing />
       <FAQ />
-      <Newsletter />
+      {/* <Newsletter /> */}
       <CTASection />
     </MainLayout>
   );
