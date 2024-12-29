@@ -54,13 +54,13 @@ export default function TeacherSignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/30 py-12">
-      <Card className="w-full max-w-2xl mx-4">
+    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
+      <Card className="w-full max-w-2xl">
         <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="flex items-center gap-2 text-[#3b82f6]">
+          {/* <div className="flex items-center gap-2 text-blue-600">
             <GraduationCap className="h-8 w-8" />
             <span className="text-2xl font-bold">ConnectEd</span>
-          </div>
+          </div> */}
           <CardTitle className="text-2xl">Create Teacher Account</CardTitle>
           <CardDescription>
             Start sharing your knowledge with students worldwide
@@ -74,7 +74,7 @@ export default function TeacherSignUp() {
               </Alert>
             )}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
@@ -106,7 +106,7 @@ export default function TeacherSignUp() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -184,7 +184,7 @@ export default function TeacherSignUp() {
 
             <Button 
               type="submit" 
-              className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
+              className="w-full"
               disabled={loading}
             >
               {loading ? "Creating Account..." : "Create Teacher Account"}
@@ -193,7 +193,7 @@ export default function TeacherSignUp() {
 
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/auth/teacher/login" className="text-[#3b82f6] hover:underline">
+            <Link href="/auth/teacher/login" className="text-blue-600 hover:underline">
               Log in
             </Link>
           </div>

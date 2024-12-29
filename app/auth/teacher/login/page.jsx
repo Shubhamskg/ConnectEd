@@ -74,7 +74,7 @@ function LoginForm() {
           <Label htmlFor="password">Password</Label>
           <Link 
             href="/auth/teacher/forgot-password"
-            className="text-sm text-[#3b82f6] hover:underline"
+            className="text-sm text-blue-600 hover:underline"
           >
             Forgot password?
           </Link>
@@ -89,7 +89,7 @@ function LoginForm() {
       </div>
       <Button 
         type="submit" 
-        className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
+        className="w-full"
         disabled={loading}
       >
         {loading ? "Logging in..." : "Log In"}
@@ -100,13 +100,13 @@ function LoginForm() {
 
 export default function TeacherLogin() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
+    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="flex items-center gap-2 text-[#3b82f6]">
+          {/* <div className="flex items-center gap-2 text-blue-600">
             <GraduationCap className="h-8 w-8" />
             <span className="text-2xl font-bold">ConnectEd</span>
-          </div>
+          </div> */}
           <CardTitle className="text-2xl">Teacher Login</CardTitle>
           <CardDescription>
             Access your teaching dashboard
@@ -124,7 +124,7 @@ export default function TeacherLogin() {
           </Suspense>
           <div className="mt-4 text-center text-sm">
             Want to start teaching?{" "}
-            <Link href="/auth/teacher/signup" className="text-[#3b82f6] hover:underline">
+            <Link href="/auth/teacher/signup" className="text-blue-600 hover:underline">
               Create teacher account
             </Link>
           </div>
