@@ -11,8 +11,6 @@ import Assignment from '@/models/Assignment';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { use } from 'react';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
 
 async function verifyAuth() {
