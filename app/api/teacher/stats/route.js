@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Enrollment from '@/models/Enrollment';
 import Course from '@/models/Course';
-import { LiveClasses } from '@/components/LiveClasses';
 import Assignment from '@/models/Assignment';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
+import Transaction from '@/models/Transaction';
+import LiveSession from '@/models/LiveSession';
 
 async function verifyAuth() {
   const cookieStore =await cookies();
@@ -69,12 +70,12 @@ export async function GET(req) {
         ,
       
       // Get earnings data
-      db.collection('transactions')
+      Transaction
         .find({ teacherId })
-        .toArray(),
+        ,
       
       // Get upcoming live classes
-      LiveClasses
+      LiveSession
         .find({
           teacherId,
           startTime: { $gte: new Date() },
