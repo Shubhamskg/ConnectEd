@@ -1,8 +1,15 @@
 // app/api/auth/student/logout/route.js
-import { NextResponse } from 'next/server';
+import { cookies } from "next/headers";
 
 export async function POST() {
-  const response = NextResponse.json({ message: 'Logged out successfully' });
-  response.cookies.delete('token');
-  return response;
+  try {
+    cookies().delete("auth-token");
+    return Response.json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return Response.json(
+      { message: "Failed to logout" },
+      { status: 500 }
+    );
+  }
 }

@@ -2,9 +2,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { useNotifications } from "@/components/Notifications/NotificationContext";
-import { NotificationDropdown } from "@/components/Notifications/NotificationDropdown";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -39,22 +36,54 @@ import {
   Search,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Badge } from "./ui/badge";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const { user, logout } = useAuth();
-  const { unreadCount } = useNotifications();
+  const [user, setUser] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
     };
+    checkAuth();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/check', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const role = user?.role || 'student';
+      const response = await fetch(`/api/auth/${role}/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        setUser(null);
+        router.push('/');
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const categories = [
     { name: "Dentistry", href: "/courses/dentistry" },
@@ -68,6 +97,7 @@ export function Navbar() {
         { label: "Dashboard", icon: Layout, href: "/dashboard/teacher" },
         { label: "My Courses", icon: BookOpen, href: "/dashboard/teacher/courses" },
         { label: "Students", icon: GraduationCap, href: "/dashboard/teacher/students" },
+        { label: "Live Classes", icon: MessageSquare, href: "/dashboard/teacher/live-stream" },
         { label: "Earnings", icon: BarChart, href: "/dashboard/teacher/earnings" },
       ];
     }
@@ -79,15 +109,6 @@ export function Navbar() {
     ];
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-200 bg-gray-50 ${
@@ -96,7 +117,7 @@ export function Navbar() {
     >
       <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-0">
+        <Link href={user?`/dashboard/${user.role}`:"/"} className="flex items-center space-x-0">
           <img 
             src="/logo2.png" 
             alt="ConnectEd Logo" 
@@ -171,7 +192,12 @@ export function Navbar() {
 
           {user ? (
             <>
-              <NotificationDropdown />
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center">
+                  2
+                </span>
+              </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -180,9 +206,8 @@ export function Navbar() {
                     className="flex items-center space-x-2 hover:bg-gray-100/80"
                   >
                     <Avatar className="h-8 w-8 ring-2 ring-offset-2 ring-blue-500">
-                      <AvatarImage src={user?.avatar} />
                       <AvatarFallback className="bg-blue-500 text-white">
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                        {user?.name?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <ChevronDown className="h-4 w-4 text-gray-600" />
@@ -191,26 +216,22 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel className="p-4">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">
-                        {user?.firstName} {user?.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {user?.email}
-                      </p>
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {getNavItems().map((item) => (
-                    <DropdownMenuItem key={item.label} className="py-2">
+                    <DropdownMenuItem key={item.href} className="py-2">
                       <Link href={item.href} className="flex items-center w-full">
                         <item.icon className="h-4 w-4 mr-3 text-gray-500" />
-                        <span>{item.label}</span>
+                        {item.label}
                       </Link>
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="py-2">
-                    <Link href="/dashboard/settings" className="flex items-center w-full">
+                    <Link href="/settings" className="flex items-center w-full">
                       <Settings className="h-4 w-4 mr-3 text-gray-500" />
                       Settings
                     </Link>
@@ -261,18 +282,13 @@ export function Navbar() {
                   <div className="space-y-6">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-blue-500">
-                        <AvatarImage src={user?.avatar} />
                         <AvatarFallback className="bg-blue-500 text-white">
-                          {user?.firstName?.[0]}{user?.lastName?.[0]}
+                          {user?.name?.[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">
-                          {user?.firstName} {user?.lastName}
-                        </p>
-                        <p className="text-sm text-gray-500 capitalize">
-                          {user?.role}
-                        </p>
+                        <p className="font-medium">{user?.name}</p>
+                        <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -296,7 +312,7 @@ export function Navbar() {
                         className="w-full justify-start py-6"
                         asChild
                       >
-                        <Link href="/dashboard/settings">
+                        <Link href="/settings">
                           <Settings className="h-5 w-5 mr-3 text-gray-500" />
                           Settings
                         </Link>
@@ -314,7 +330,7 @@ export function Navbar() {
                 ) : (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Link href="/courses/dentistry" className="block py-3 text-gray-700 hover:text-blue-600">
+                      <Link href="/courses" className="block py-3 text-gray-700 hover:text-blue-600">
                         Browse Courses
                       </Link>
                       <Link href="/auth/teacher/signup" className="block py-3 text-gray-700 hover:text-blue-600">

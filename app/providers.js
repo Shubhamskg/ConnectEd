@@ -1,9 +1,7 @@
-// app/providers.jsx
-"use client";
-
-import { ReactNode } from "react";
-import { KindeProvider } from "@kinde-oss/kinde-auth-nextjs";
+// app/providers.js
+"use client"
+import { SessionProvider } from "next-auth/react"
 
 export default function Providers({ children }) {
-  return <KindeProvider>{children}</KindeProvider>;
+  return <SessionProvider>{children}</SessionProvider>
 }

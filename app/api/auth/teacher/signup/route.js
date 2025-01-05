@@ -1,72 +1,81 @@
 // app/api/auth/teacher/signup/route.js
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import User from '@/lib/models/User';
-import Teacher from '@/lib/models/Teacher';
+import { connectDB } from "@/lib/mongodb";
+import Teacher from "@/models/Teacher";
+import crypto from 'crypto';
+import { sendVerificationEmail } from '@/lib/email';
 
 export async function POST(request) {
   try {
     await connectDB();
+    const { name, email, password } = await request.json();
 
-    const {
-      firstName,
-      lastName,
-      email,
-      password,
-      confirmPassword,
-      specialty,
-      credentials,
-      bio,
-      hourlyRate = 50 // Default hourly rate
-    } = await request.json();
-
-    // Validation
-    if (password !== confirmPassword) {
-      return NextResponse.json(
-        { message: 'Passwords do not match' },
+    // Input validation
+    if (!name || !email || !password) {
+      return Response.json(
+        { message: "All fields are required" },
         { status: 400 }
       );
     }
 
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'Email already registered' },
+    // Check if email already exists
+    const existingTeacher = await Teacher.findOne({ email });
+    if (existingTeacher) {
+      return Response.json(
+        { message: "Email already registered" },
         { status: 400 }
       );
     }
 
-    // Create user with teacher role
-    const user = await User.create({
-      firstName,
-      lastName,
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Create new teacher
+    const teacher = new Teacher({
+      name,
       email,
       password,
+      verificationToken,
+      verificationTokenExpires,
+      verified: false
+    });
+
+    await teacher.save();
+
+    // Send verification email
+    await sendVerificationEmail({
+      email,
+      token: verificationToken,
+      name,
       role: 'teacher'
     });
 
-    // Create teacher profile
-    const teacher = await Teacher.create({
-      userId: user._id,
-      specialty,
-      credentials,
-      bio,
-      hourlyRate,
-      expertise: [specialty], // Initial expertise based on specialty
-      verificationStatus: 'pending'
+    return Response.json({
+      message: "Registration successful! Please check your email to verify your account."
     });
 
-    return NextResponse.json(
-      { message: 'Teacher account created successfully' },
-      { status: 201 }
-    );
   } catch (error) {
-    console.error('Teacher signup error:', error);
-    return NextResponse.json(
-      { message: 'Something went wrong' },
+    console.error('Signup error:', error);
+    
+    if (error.message === 'Failed to send verification email') {
+      return Response.json(
+        { message: "Account created but failed to send verification email. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    // Handle mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return Response.json(
+        { message: validationErrors.join(', ') },
+        { status: 400 }
+      );
+    }
+
+    return Response.json(
+      { message: "Internal server error" },
       { status: 500 }
     );
   }
 }
-

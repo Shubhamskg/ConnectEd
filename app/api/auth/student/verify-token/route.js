@@ -1,46 +1,54 @@
 // app/api/auth/student/verify-token/route.js
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import User from '@/lib/models/User';
-import crypto from 'crypto';
+import { connectDB } from "@/lib/mongodb";
+import Student from "@/models/Student";
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
 
+    console.log('Attempting to verify token:', token);
+
     if (!token) {
-      return NextResponse.json(
-        { message: 'Token is required' },
+      return Response.json(
+        { message: "Verification token is required" },
         { status: 400 }
       );
     }
 
     await connectDB();
 
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
-
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() },
-      role: 'student'
+    // Find student with exact token match
+    const student = await Student.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { message: 'Invalid or expired reset token' },
+    console.log('Found student:', student ? student.email : 'No student found');
+
+    if (!student) {
+      return Response.json(
+        { message: "Invalid or expired verification token" },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ message: 'Token is valid' });
+    // Update student verification status
+    student.verified = true;
+    student.verificationToken = undefined;
+    student.verificationTokenExpires = undefined;
+    await student.save();
+
+    console.log('Successfully verified student:', student.email);
+
+    return Response.json({ 
+      message: "Email verified successfully. You can now log in."
+    });
+
   } catch (error) {
-    console.error('Token verification error:', error);
-    return NextResponse.json(
-      { message: 'Failed to verify token' },
+    console.error('Verification error:', error);
+    return Response.json(
+      { message: "Verification failed. Please try again." },
       { status: 500 }
     );
   }

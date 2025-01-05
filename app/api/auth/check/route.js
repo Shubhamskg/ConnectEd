@@ -1,53 +1,59 @@
 // app/api/auth/check/route.js
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import connectDB from '@/lib/db';
-import User from '@/lib/models/User';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { connectDB } from '@/lib/mongodb';
+import Teacher from '@/models/Teacher';
 
 export async function GET(request) {
   try {
-    const token = request.cookies.get('token');
-    if (!token) {
-      return NextResponse.json(null, { status: 401 });
+    const cookieStore = await cookies();
+    const authToken =  cookieStore.get('auth-token');
+
+    if (!authToken || !authToken.value) {
+      return NextResponse.json(
+        { message: "Not authenticated" },
+        { status: 401 }
+      );
     }
 
-    const decoded = verifyToken(token.value);
-    if (!decoded) {
-      return NextResponse.json(null, { status: 401 });
+    try {
+      const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
+      
+      await connectDB();
+
+      const user = await Teacher.findById(decoded.userId)
+        .select('-password')
+        .lean();
+
+      if (!user) {
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          role: 'teacher'
+        }
+      });
+
+    } catch (err) {
+      return NextResponse.json(
+        { message: "Invalid token" },
+        { status: 401 }
+      );
     }
 
-    await connectDB();
-
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return NextResponse.json(null, { status: 401 });
-    }
-
-    // Get role-specific data
-    let profileData = {};
-    if (user.role === 'teacher') {
-      const teacher = await Teacher.findOne({ userId: user._id });
-      profileData = {
-        specialty: teacher.specialty,
-        verificationStatus: teacher.verificationStatus
-      };
-    } else {
-      const student = await Student.findOne({ userId: user._id });
-      profileData = {
-        interests: student.interests
-      };
-    }
-
-    return NextResponse.json({
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      ...profileData
-    });
   } catch (error) {
     console.error('Auth check error:', error);
-    return NextResponse.json(null, { status: 401 });
+    return NextResponse.json(
+      { message: "Authentication failed" },
+      { status: 401 }
+    );
   }
 }

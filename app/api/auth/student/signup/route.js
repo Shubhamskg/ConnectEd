@@ -1,48 +1,69 @@
 // app/api/auth/student/signup/route.js
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import User from '@/lib/models/User';
+import { connectDB } from "@/lib/mongodb";
+import Student from "@/models/Student";
+import crypto from 'crypto';
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request) {
   try {
     await connectDB();
+    const { name, email, password } = await request.json();
 
-    const { firstName, lastName, email, password, confirmPassword } = await request.json();
-
-    // Validation
-    if (password !== confirmPassword) {
-      return NextResponse.json(
-        { message: 'Passwords do not match' },
+    // Validate email format
+    if (!email || !email.includes('@')) {
+      return Response.json(
+        { message: "Invalid email format" },
         { status: 400 }
       );
     }
 
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'Email already registered' },
+    // Check for existing student
+    const existingStudent = await Student.findOne({ email: email.toLowerCase() });
+    if (existingStudent) {
+      return Response.json(
+        { message: "Email already registered" },
         { status: 400 }
       );
     }
 
-    // Create user
-    const user = await User.create({
-      firstName,
-      lastName,
-      email,
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(16).toString('hex');
+
+    // Create new student with explicit fields
+    const student = new Student({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password,
+      verificationToken,
+      verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      verified: false
+    });
+
+    // Log for debugging
+    console.log('Creating student with token:', verificationToken);
+
+    await student.save();
+
+    // Verify student was saved
+    const savedStudent = await Student.findOne({ email: email.toLowerCase() });
+    console.log('Saved student verification token:', savedStudent?.verificationToken);
+
+    // Send verification email
+    await sendVerificationEmail({
+      email: student.email,
+      name: student.name,
+      token: verificationToken,
       role: 'student'
     });
 
-    return NextResponse.json(
-      { message: 'Account created successfully' },
-      { status: 201 }
-    );
+    return Response.json({
+      message: "Registration successful! Please check your email to verify your account."
+    });
+
   } catch (error) {
     console.error('Signup error:', error);
-    return NextResponse.json(
-      { message: 'Something went wrong' },
+    return Response.json(
+      { message: "Failed to create account. Please try again." },
       { status: 500 }
     );
   }

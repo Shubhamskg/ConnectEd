@@ -1,7 +1,7 @@
 // app/auth/student/login/page.jsx
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GraduationCap } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -98,30 +97,18 @@ function LoginForm() {
   );
 }
 
-export default function StudentLogin() {
+export default function StudentLoginPage() {
   return (
     <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
       <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          {/* <div className="flex items-center gap-2 text-blue-600">
-            <GraduationCap className="h-8 w-8" />
-            <span className="text-2xl font-bold">ConnectEd</span>
-          </div> */}
-          <CardTitle className="text-2xl">Student Login</CardTitle>
-          <CardDescription>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Student Login</CardTitle>
+          <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Suspense fallback={
-            <div className="space-y-4">
-              <div className="h-10 bg-gray-100 rounded animate-pulse" />
-              <div className="h-10 bg-gray-100 rounded animate-pulse" />
-              <div className="h-10 bg-gray-100 rounded animate-pulse" />
-            </div>
-          }>
-            <LoginForm />
-          </Suspense>
+          <LoginForm />
           <div className="mt-4 text-center text-sm">
             Don't have an account?{" "}
             <Link href="/auth/student/signup" className="text-blue-600 hover:underline">

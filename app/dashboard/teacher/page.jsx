@@ -1,29 +1,108 @@
 // app/dashboard/teacher/page.jsx
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { UpcomingClasses } from "@/components/dashboard/UpcomingClasses";
-import { Users, BookOpen, Clock, GraduationCap } from "lucide-react";
+import { 
+  Loader2, Book, Users, Calendar, TrendingUp, 
+  Plus, Clock, DollarSign, BarChart2, Video 
+} from "lucide-react";
 
 export default function TeacherDashboard() {
-  const stats = {
-    totalStudents: 256,
-    activeCourses: 8,
-    upcomingClasses: 4,
-    completionRate: "85%",
-  };
+  const router = useRouter();
+  const [teacher, setTeacher] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    activeCourses: 0,
+    upcomingClasses: 0,
+    totalEarnings: 0,
+    courseCompletionRate: 0,
+    totalAssignments: 0
+  });
+
+  useEffect(() => {
+    const fetchTeacherData = async () => {
+      try {
+        const [profileRes, statsRes] = await Promise.all([
+          fetch('/api/teacher/profile'),
+          fetch('/api/teacher/stats')
+        ]);
+
+        if (!profileRes.ok) {
+          if (profileRes.status === 401) {
+            router.push('/auth/teacher/login');
+            return;
+          }
+          throw new Error('Failed to fetch profile data');
+        }
+
+        const [profileData, statsData] = await Promise.all([
+          profileRes.json(),
+          statsRes.json()
+        ]);
+        console.log("profileData",profileData)
+        setTeacher(profileData?.teacher);
+        setStats(statsData);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeacherData();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-red-500">Error: {error}</p>
+        <Button onClick={() => router.push('/auth/teacher/login')}>
+          Return to Login
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-8">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Welcome back, {teacher?.name}
+          </p>
+        </div>
         <div className="flex space-x-2">
-          <Button>Create Course</Button>
-          <Button variant="outline">View Schedule</Button>
+          <Button onClick={() => router.push('/dashboard/teacher/livestream')}>
+            <Video className="h-4 w-4 mr-2" />
+            Go Live
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => router.push('/dashboard/teacher/courses/upload')}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Upload Course
+          </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Students</CardTitle>
@@ -32,51 +111,118 @@ export default function TeacherDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalStudents}</div>
             <p className="text-xs text-muted-foreground">
-              +12 from last month
+              Enrolled across all courses
             </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeCourses}</div>
             <p className="text-xs text-muted-foreground">
-              2 courses pending approval
+              Currently published
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {/* ${stats.totalEarnings.toLocaleString()} */}{stats.totalEarnings}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Lifetime earnings
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Upcoming Classes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.upcomingClasses}</div>
             <p className="text-xs text-muted-foreground">
-              Next class in 2 hours
+              Next 7 days
             </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Course Completion</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completionRate}</div>
+            <div className="text-2xl font-bold">
+              {stats.courseCompletionRate}%
+            </div>
             <p className="text-xs text-muted-foreground">
-              Average across all courses
+              Average completion rate
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Assignments</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalAssignments}</div>
+            <p className="text-xs text-muted-foreground">
+              Active assignments
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <UpcomingClasses />
-        <RecentActivity />
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Button 
+          variant="outline" 
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/teacher/assignments')}
+        >
+          <Clock className="h-6 w-6" />
+          <span>Create Assignment</span>
+        </Button>
+        
+        <Button 
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/teacher/discussions')}
+        >
+          {/* <MessageSquare className="h-6 w-6" /> */}
+          <span>Start Discussion</span>
+        </Button>
+
+        <Button 
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/teacher/analytics')}
+        >
+          <BarChart2 className="h-6 w-6" />
+          <span>View Analytics</span>
+        </Button>
+
+        <Button 
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/teacher/students')}
+        >
+          <Users className="h-6 w-6" />
+          <span>Manage Students</span>
+        </Button>
       </div>
     </div>
   );

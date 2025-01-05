@@ -1,80 +1,63 @@
 // app/api/teacher/profile/route.js
+import { cookies } from 'next/headers';
+import { connectDB } from "@/lib/mongodb";
+import Teacher from "@/models/Teacher";
+import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Teacher from '@/lib/models/Teacher';
-import { getToken } from '@/lib/auth';
+import { ObjectId } from 'mongodb';
 
 export async function GET(request) {
   try {
-    await connectDB();
+    // Get auth token from cookies
+    const token = request.cookies.get('auth-token');
 
-    const token = await getToken(request);
     if (!token) {
-      return NextResponse.json(
-        { message: 'Not authenticated' },
+      return Response.json(
+        { message: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const teacher = await Teacher.findOne({ userId: token.id })
-      .populate('followers', 'firstName lastName')
-      .select('-earnings.history');
-
-    if (!teacher) {
-      return NextResponse.json(
-        { message: 'Teacher profile not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(teacher);
-  } catch (error) {
-    console.error('Get teacher profile error:', error);
-    return NextResponse.json(
-      { message: 'Something went wrong' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request) {
-  try {
-    await connectDB();
-
-    const token = await getToken(request);
-    if (!token) {
-      return NextResponse.json(
-        { message: 'Not authenticated' },
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token.value, process.env.JWT_SECRET);
+    } catch (err) {
+      return Response.json(
+        { message: "Invalid token" },
         { status: 401 }
       );
     }
 
-    const updateData = await request.json();
+    // Connect to database and fetch teacher data
+    await connectDB();
     
-    // Prevent updating sensitive fields
-    delete updateData.verificationStatus;
-    delete updateData.accountStatus;
-    delete updateData.earnings;
-    delete updateData.userId;
-
-    const teacher = await Teacher.findOneAndUpdate(
-      { userId: token.id },
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
+    const teacher = await Teacher.findById(decoded.userId)
+      .select('-password -verificationToken -resetPasswordToken');
+    
     if (!teacher) {
-      return NextResponse.json(
-        { message: 'Teacher profile not found' },
+      return Response.json(
+        { message: "Teacher not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(teacher);
+    // Return teacher data
+    return Response.json({
+      teacher: {
+        id: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+        department: teacher.department || null,
+        phone: teacher.phone || null,
+        location: teacher.location || null
+      }
+    });
+
   } catch (error) {
-    console.error('Update teacher profile error:', error);
-    return NextResponse.json(
-      { message: 'Something went wrong' },
+    console.error('Profile fetch error:', error);
+    return Response.json(
+      { message: "Internal server error" },
       { status: 500 }
     );
   }

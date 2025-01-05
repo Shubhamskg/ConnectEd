@@ -1,44 +1,39 @@
 // app/auth/student/forgot-password/page.jsx
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GraduationCap, ArrowLeft } from "lucide-react";
+import { useState } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function StudentForgotPassword() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [email, setEmail] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    setError('');
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/student/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/auth/student/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to process request");
+        throw new Error(data.message || 'Something went wrong');
       }
 
-      setSuccess("Password reset instructions have been sent to your email");
-      setEmail("");
+      setSuccess(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -47,16 +42,12 @@ export default function StudentForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
+    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
       <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          {/* <div className="flex items-center gap-2 text-[#3b82f6]">
-            <GraduationCap className="h-8 w-8" />
-            <span className="text-2xl font-bold">ConnectEd</span>
-          </div> */}
-          <CardTitle className="text-2xl">Reset Student Password</CardTitle>
-          <CardDescription>
-            Enter your email address and we'll send you password reset instructions
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email address and we'll send you a password reset link
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -68,37 +59,38 @@ export default function StudentForgotPassword() {
             )}
             {success && (
               <Alert className="bg-green-50 text-green-700">
-                <AlertDescription>{success}</AlertDescription>
+                <AlertDescription>
+                  If an account exists with this email, you will receive password reset instructions.
+                </AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your registered email"
               />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading}
             >
-              {loading ? "Processing..." : "Send Reset Instructions"}
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </Button>
+            <div className="text-center text-sm">
+              Remember your password?{' '}
+              <Link
+                href="/auth/student/login"
+                className="text-blue-600 hover:underline"
+              >
+                Log in
+              </Link>
+            </div>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <Link 
-              href="/auth/student/login" 
-              className="text-[#3b82f6] hover:underline inline-flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Login
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

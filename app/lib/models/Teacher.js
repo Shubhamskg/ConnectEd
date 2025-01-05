@@ -1,121 +1,62 @@
 // lib/models/Teacher.js
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
-const teacherSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  specialty: {
+const TeacherSchema = new mongoose.Schema({
+  name: {
     type: String,
-    required: [true, 'Specialty is required'],
+    required: [true, "Name is required"],
     trim: true
   },
-  credentials: {
+  email: {
     type: String,
-    required: [true, 'Professional credentials are required'],
-    trim: true
-  },
-  bio: {
-    type: String,
-    required: [true, 'Professional bio is required'],
-    maxlength: 1000
-  },
-  certifications: [{
-    name: String,
-    file: String,
-    uploadDate: Date,
-    verified: {
-      type: Boolean,
-      default: false
-    }
-  }],
-  expertise: [{
-    type: String,
-    trim: true
-  }],
-  hourlyRate: {
-    type: Number,
-    required: [true, 'Hourly rate is required'],
-    min: 0
-  },
-  availability: [{
-    day: {
-      type: String,
-      enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    },
-    startTime: String,
-    endTime: String
-  }],
-  rating: {
-    average: {
-      type: Number,
-      default: 0
-    },
-    count: {
-      type: Number,
-      default: 0
-    }
-  },
-  reviews: [{
-    studentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    rating: Number,
-    comment: String,
-    date: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  socialMedia: {
-    linkedin: String,
-    twitter: String,
-    website: String
-  },
-  followers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  earnings: {
-    total: {
-      type: Number,
-      default: 0
-    },
-    pending: {
-      type: Number,
-      default: 0
-    },
-    history: [{
-      amount: Number,
-      date: Date,
-      courseId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
+    required: [true, "Email is required"],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(v);
       },
-      type: {
-        type: String,
-        enum: ['live-session', 'recorded-course']
-      }
-    }]
+      message: props => `${props.value} is not a valid email!`
+    }
   },
-  verificationStatus: {
+  password: {
     type: String,
-    enum: ['pending', 'verified', 'rejected'],
-    default: 'pending'
+    required: [true, "Password is required"],
+    minlength: [6, "Password must be at least 6 characters"]
   },
-  accountStatus: {
-    type: String,
-    enum: ['active', 'inactive', 'suspended'],
-    default: 'active'
+  verified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: String,
+  verificationTokenExpires: Date,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true
 });
 
-const Teacher = mongoose.models.Teacher || mongoose.model('Teacher', teacherSchema);
+// Hash password before saving
+TeacherSchema.pre("save", async function(next) {
+  if (!this.isModified("password")) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
+// Method to check password
+TeacherSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+const Teacher = mongoose.models.Teacher || mongoose.model("Teacher", TeacherSchema);
 export default Teacher;

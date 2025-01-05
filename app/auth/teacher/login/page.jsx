@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GraduationCap } from "lucide-react";
+import { ResendVerification } from '@/components/ResendVerification';
+
 
 function LoginForm() {
   const router = useRouter();
@@ -49,11 +51,12 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      {error === "Please verify your email first" && (
+  <div className="mt-2 text-sm text-center">
+    Didn't receive the verification email?{" "}
+    <ResendVerification role="teacher" />
+  </div>
+)}
       {searchParams.get("success") && (
         <Alert className="mb-4 bg-green-50 text-green-700">
           <AlertDescription>{searchParams.get("success")}</AlertDescription>
@@ -103,13 +106,14 @@ export default function TeacherLogin() {
     <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1 flex flex-col items-center">
-          {/* <div className="flex items-center gap-2 text-blue-600">
+          {/* Commented out as per student login
+          <div className="flex items-center gap-2 text-blue-600">
             <GraduationCap className="h-8 w-8" />
             <span className="text-2xl font-bold">ConnectEd</span>
           </div> */}
           <CardTitle className="text-2xl">Teacher Login</CardTitle>
           <CardDescription>
-            Access your teaching dashboard
+            Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -123,9 +127,9 @@ export default function TeacherLogin() {
             <LoginForm />
           </Suspense>
           <div className="mt-4 text-center text-sm">
-            Want to start teaching?{" "}
+            Don't have an account?{" "}
             <Link href="/auth/teacher/signup" className="text-blue-600 hover:underline">
-              Create teacher account
+              Sign up
             </Link>
           </div>
         </CardContent>

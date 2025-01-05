@@ -1,48 +1,47 @@
 // app/api/auth/teacher/verify-token/route.js
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import User from '@/lib/models/User';
-import crypto from 'crypto';
+import { connectDB } from "@/lib/mongodb";
+import Teacher from "@/models/Teacher";
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
+    const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { message: 'Token is required' },
+      return Response.json(
+        { message: "Verification token is required" },
         { status: 400 }
       );
     }
 
     await connectDB();
-
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
-
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() },
-      role: 'teacher'
+    
+    const teacher = await Teacher.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { message: 'Invalid or expired reset token' },
+    if (!teacher) {
+      return Response.json(
+        { message: "Invalid or expired verification token" },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ message: 'Token is valid' });
+    teacher.verified = true;
+    teacher.verificationToken = undefined;
+    teacher.verificationTokenExpires = undefined;
+    await teacher.save();
+
+    return Response.json({ 
+      message: "Email verified successfully",
+      redirectUrl: "/auth/teacher/login?success=" + encodeURIComponent("Email verified successfully. You can now log in.")
+    });
   } catch (error) {
-    console.error('Token verification error:', error);
-    return NextResponse.json(
-      { message: 'Failed to verify token' },
+    console.error("Verification error:", error);
+    return Response.json(
+      { message: "Internal server error" },
       { status: 500 }
     );
   }
 }
-

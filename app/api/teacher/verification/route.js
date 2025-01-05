@@ -4,6 +4,7 @@ import connectDB from '@/lib/db';
 import Teacher from '@/lib/models/Teacher';
 import { getToken } from '@/lib/auth';
 
+
 export async function POST(request) {
   try {
     await connectDB();
