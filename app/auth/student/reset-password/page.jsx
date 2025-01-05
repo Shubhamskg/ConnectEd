@@ -1,7 +1,6 @@
-// app/auth/student/reset-password/page.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,23 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function StudentResetPassword() {
+// Separate component for the form content
+function ResetPasswordForm({ token }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
   });
-
-  const token = searchParams.get('token');
-
-  useEffect(() => {
-    if (!token) {
-      router.push('/auth/student/login');
-    }
-  }, [token, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,6 +54,48 @@ export default function StudentResetPassword() {
   };
 
   return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor="password">New Password</Label>
+        <Input
+          id="password"
+          type="password"
+          required
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          required
+          value={formData.confirmPassword}
+          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+        />
+      </div>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={loading}
+      >
+        {loading ? 'Resetting Password...' : 'Reset Password'}
+      </Button>
+    </form>
+  );
+}
+
+// Main component with Suspense boundary
+export default function StudentResetPassword() {
+  const router = useRouter();
+  
+  return (
     <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1">
@@ -72,42 +105,28 @@ export default function StudentResetPassword() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Resetting Password...' : 'Reset Password'}
-            </Button>
-          </form>
+          <Suspense fallback={<div>Loading...</div>}>
+            <ResetPasswordContent />
+          </Suspense>
         </CardContent>
       </Card>
     </div>
   );
+}
+
+// Component that uses useSearchParams
+function ResetPasswordContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = searchParams.get('token');
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/student/login');
+    }
+  }, [token, router]);
+
+  if (!token) return null;
+
+  return <ResetPasswordForm token={token} />;
 }
