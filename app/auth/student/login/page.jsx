@@ -1,7 +1,6 @@
-// app/auth/student/login/page.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,9 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Separate component for the search params functionality
+function LoginMessages() {
+  const searchParams = useSearchParams();
+  
+  if (searchParams.get("success")) {
+    return (
+      <Alert className="mb-4 bg-green-50 text-green-700">
+        <AlertDescription>{searchParams.get("success")}</AlertDescription>
+      </Alert>
+    );
+  }
+  
+  return null;
+}
+
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -53,11 +66,9 @@ function LoginForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      {searchParams.get("success") && (
-        <Alert className="mb-4 bg-green-50 text-green-700">
-          <AlertDescription>{searchParams.get("success")}</AlertDescription>
-        </Alert>
-      )}
+      <Suspense fallback={null}>
+        <LoginMessages />
+      </Suspense>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -71,7 +82,7 @@ function LoginForm() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
-          <Link 
+          <Link
             href="/auth/student/forgot-password"
             className="text-sm text-blue-600 hover:underline"
           >
@@ -86,8 +97,8 @@ function LoginForm() {
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
         />
       </div>
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         className="w-full"
         disabled={loading}
       >
