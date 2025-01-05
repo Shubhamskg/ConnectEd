@@ -1,6 +1,6 @@
 // app/api/live-sessions/end/route.js
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@/lib/mongodb';
 import LiveSession from '@/lib/models/LiveSession';
 
 export async function POST(req) {

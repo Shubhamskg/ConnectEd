@@ -1,6 +1,6 @@
 // app/api/teacher/stream/route.js
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { connectDB } from '@/lib/mongodb';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';

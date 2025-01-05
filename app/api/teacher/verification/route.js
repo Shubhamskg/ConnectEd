@@ -1,15 +1,15 @@
 // app/api/teacher/verification/route.js
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import { connectDB } from '@/lib/mongodb';
 import Teacher from '@/lib/models/Teacher';
-import { getToken } from '@/lib/auth';
+import { getAuthToken } from '@/lib/auth';
 
 
 export async function POST(request) {
   try {
     await connectDB();
 
-    const token = await getToken(request);
+    const token = await getAuthToken();
     if (!token || token.role !== 'admin') {
       return NextResponse.json(
         { message: 'Not authorized' },

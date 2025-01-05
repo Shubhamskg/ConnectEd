@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -22,7 +23,8 @@ import {
 } from "@/components/ui/card";
 import { Loader2, Search, SlidersHorizontal } from "lucide-react";
 
-export default function CoursesPage() {
+// Separate component for the course content that uses searchParams
+function CourseContent() {
   const router = useRouter();
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -41,7 +43,6 @@ export default function CoursesPage() {
 
   const fetchCourses = async () => {
     try {
-      // Convert 'all' back to empty string for the API
       const apiFilters = {
         ...filters,
         domain: filters.domain === 'all' ? '' : filters.domain,
@@ -76,15 +77,7 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Explore Our Courses</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Discover high-quality courses taught by expert instructors across medical, dental, and nursing domains.
-        </p>
-      </div>
-
+    <>
       {/* Search and Filters */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <div className="md:col-span-2">
@@ -178,6 +171,31 @@ export default function CoursesPage() {
           </p>
         </div>
       )}
+    </>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function CoursesPage() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Explore Our Courses</h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Discover high-quality courses taught by expert instructors across medical, dental, and nursing domains.
+        </p>
+      </div>
+
+      <Suspense 
+        fallback={
+          <div className="flex justify-center items-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        }
+      >
+        <CourseContent />
+      </Suspense>
     </div>
   );
 }

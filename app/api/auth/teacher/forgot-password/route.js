@@ -1,7 +1,7 @@
 // app/api/auth/teacher/forgot-password/route.js
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import connectDB from '@/lib/db';
+import { connectDB } from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { sendPasswordResetEmail } from '@/lib/email';
 

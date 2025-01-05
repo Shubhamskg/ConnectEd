@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import path from 'path';
-import { db } from '@/lib/db';
+import { connectDB } from '@/lib/mongodb';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';

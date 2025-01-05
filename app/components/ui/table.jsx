@@ -8,7 +8,7 @@ export const Table = ({ children, ...props }) => {
   );
 };
 
-export const TableHead = ({ children }) => {
+export const TableHeader = ({ children }) => {
   return <thead className="bg-gray-100">{children}</thead>;
 };
 
