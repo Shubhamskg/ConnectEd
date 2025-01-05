@@ -11,7 +11,6 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHead,
   TableRow,
 } from "@/components/ui/table";
 
@@ -109,7 +108,6 @@ export default function AssignmentSubmissions() {
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHead>
               <TableRow>
                 <TableHead>Student</TableHead>
                 <TableHead>Submitted</TableHead>
@@ -117,7 +115,6 @@ export default function AssignmentSubmissions() {
                 <TableHead>Grade</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
-            </TableHead>
             <TableBody>
               {assignment.submissions?.map((submission) => (
                 <TableRow key={submission._id}>
