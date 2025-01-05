@@ -1,6 +1,6 @@
 // app/api/teacher/assignments/route.js
 import { NextResponse } from 'next/server';
-import { Assignment } from '@/lib/models/index';
+import Assignment from '@/models/Assignment';
 import { connectDB } from '@/lib/mongodb';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';

@@ -4,7 +4,7 @@ import Course from "@/models/Course";
 import Student from "@/models/Student";
 import Enrollment from "@/models/Enrollment";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/api/auth/[...nextauth]/route";
 
 export async function POST(request, { params }) {
   try {

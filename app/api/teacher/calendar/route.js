@@ -1,6 +1,6 @@
 // app/api/teacher/calendar/route.js
 import { NextResponse } from 'next/server';
-import { CalendarEvent } from '@/lib/models/index';
+import { CalendarEvent } from '@/models/CalendarEvent';
 import { connectDB } from '@/lib/mongodb';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
