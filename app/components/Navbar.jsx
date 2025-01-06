@@ -111,7 +111,7 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-200 bg-gray-50 ${
+      className={`top-0 z-50 w-full transition-all duration-200 bg-gray-50 ${
         isScrolled ? "shadow-sm" : ""
       }`}
     >
