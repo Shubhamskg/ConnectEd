@@ -165,6 +165,13 @@ export function Navbar() {
           >
             <Link href="/courses">Explore Courses</Link>
           </Button>
+          <Button 
+            variant="ghost" 
+            asChild
+            className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
+          >
+            <Link href="/events">Explore Events</Link>
+          </Button>
 
           {!user && (
             <Button 
