@@ -44,7 +44,7 @@ async function verifyAuth() {
 export async function GET(request, { params }) {
   try {
     // Get auth token
-    const cookieStore = cookies();
+    const cookieStore =await cookies();
     const authToken = cookieStore.get('auth-token');
     
     if (!authToken || !authToken.value) {

@@ -38,6 +38,7 @@ export async function uploadToFirebase(file, path, progressCallback = null) {
   
   // Create a storage reference
   const fileRef = ref(storage, `${path}/${Date.now()}-${file.name}`);
+  console.log("filref",fileRef)
   
   try {
     // Create upload task

@@ -12,7 +12,7 @@ import {
   Upload,
   FileText,
   Settings,
-  Layout
+  Layout,
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -22,13 +22,15 @@ const Sidebar = () => {
     { icon: Layout, label: 'Dashboard', href: '/dashboard/teacher' },
     { icon: BarChart2, label: 'Analytics', href: '/dashboard/teacher/analytics' },
     { icon: Book, label: 'Courses', href: '/dashboard/teacher/courses' },
-    { icon: FileText, label: 'Assignments', href: '/dashboard/teacher/assignments' },
-    { icon: MessageSquare, label: 'Discussions', href: '/dashboard/teacher/discussions' },
+    { icon: Calendar, label: 'Event', href: '/dashboard/teacher/events' },
+    // { icon: FileText, label: 'Assignments', href: '/dashboard/teacher/assignments' },
+    // { icon: MessageSquare, label: 'Discussions', href: '/dashboard/teacher/discussions' },
     { icon: Video, label: 'Livestream', href: '/dashboard/teacher/livestream' },
-    { icon: Calendar, label: 'Calendar', href: '/dashboard/teacher/calendar' },
-    { icon: Users, label: 'Students', href: '/dashboard/teacher/students' },
+    // { icon: Calendar, label: 'Calendar', href: '/dashboard/teacher/calendar' },
+    // { icon: Users, label: 'Students', href: '/dashboard/teacher/students' },
     { icon: Upload, label: 'Upload Course', href: '/dashboard/teacher/courses/upload' },
-    { icon: Settings, label: 'Settings', href: '/dashboard/teacher/settings' }
+    { icon: Settings, label: 'Settings', href: '/dashboard/teacher/settings' },
+    
   ];
 
   return (
