@@ -12,6 +12,48 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+export async function sendEmail({ to, subject, template, data }) {
+  const templates = {
+    'event-registration': ({ eventTitle, eventDate, ticketType, registrationId }) => `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+        <h2>Thank you for registering for ${eventTitle}!</h2>
+        <p>We are excited to have you join us. Here are the details of your registration:</p>
+        <ul>
+          <li><strong>Event Title:</strong> ${eventTitle}</li>
+          <li><strong>Event Date:</strong> ${new Date(eventDate).toLocaleString()}</li>
+          <li><strong>Ticket Type:</strong> ${ticketType}</li>
+          <li><strong>Registration ID:</strong> ${registrationId}</li>
+        </ul>
+        <p>If you have any questions, feel free to contact us.</p>
+        <p>We look forward to seeing you there!</p>
+      </div>
+    `,
+    // Add other templates as needed
+  };
+
+  if (!templates[template]) {
+    throw new Error(`Email template '${template}' not found`);
+  }
+
+  const html = templates[template](data);
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to,
+    subject,
+    html,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Send email error:', error);
+    throw new Error('Failed to send email');
+  }
+}
+
 export async function sendVerificationEmail({ email, name, token, role }) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const verificationUrl = `${baseUrl}/auth/${role}/verify-token?token=${encodeURIComponent(token)}`;

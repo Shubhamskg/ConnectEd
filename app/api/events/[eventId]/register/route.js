@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import Event from '@/models/Event';
 import Registration from '@/models/Registration';
-import { sendEmail } from '@/lib/mail';
+import { sendEmail } from '@/lib/email';
 
 export async function POST(request, { params }) {
   try {
