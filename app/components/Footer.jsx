@@ -35,7 +35,7 @@ export function Footer() {
     resources: [
       { name: 'Help Center', href: '/help' },
       { name: 'Terms of Service', href: '/terms' },
-      { name: 'Privacy Policy', href: '/privacy' },
+      { name: 'Privacy Policy', href: '/privacy-policy' },
       { name: 'CPD Information', href: '/cpd-info' },
     ],
   };
