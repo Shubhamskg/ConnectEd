@@ -56,15 +56,15 @@ export function CourseListItem({ course }) {
             <div className="flex items-center gap-2">
               <div className="relative w-10 h-10">
                 <Image
-                  src={course.instructor.avatar || "/placeholders/course-1.jpeg"}
-                  alt={course.instructor.name}
+                  src={course?.avatar || "/placeholders/course-1.jpeg"}
+                  alt={course.teacherName}
                   fill
                   className="rounded-full object-cover"
                 />
               </div>
               <div>
-                <p className="font-medium">{course.instructor.name}</p>
-                <p className="text-sm text-muted-foreground">{course.instructor.role}</p>
+                <p className="font-medium">{course.teacherName}</p>
+                <p className="text-sm text-muted-foreground">{course?.role}</p>
               </div>
             </div>
             <Button>View Course</Button>

@@ -3,17 +3,37 @@ import mongoose from 'mongoose';
 
 const eventRegistrationSchema = new mongoose.Schema({
   eventId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Event',
-    required: true
-  },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Event',
+      required: true
+    },
+    ticketTier: {
+      id: mongoose.Schema.Types.ObjectId,
+      name: String,
+      price: Number
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'confirmed', 'cancelled', 'attended'],
+      default: 'confirmed'
+    },
+    registeredAt: {
+      type: Date,
+      default: Date.now
+    },
+    attendedAt: Date,
+    cancellationReason: String,
+    paymentId: String,
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'refunded'],
+      default: 'pending'
+    },
+    refundId: String,
+    refundedAt: Date,
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Student',
-    required: true
-  },
-  ticketTier: {
-    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   status: {

@@ -179,7 +179,7 @@ export function Navbar() {
               asChild
               className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
             >
-              <Link href="/auth/teacher/signup">Teach on ConnectEd</Link>
+              <Link href="/auth/teacher/login">Teach on ConnectEd</Link>
             </Button>
           )}
         </div>
@@ -340,7 +340,7 @@ export function Navbar() {
                       <Link href="/courses" className="block py-3 text-gray-700 hover:text-blue-600">
                         Browse Courses
                       </Link>
-                      <Link href="/auth/teacher/signup" className="block py-3 text-gray-700 hover:text-blue-600">
+                      <Link href="/auth/teacher/login" className="block py-3 text-gray-700 hover:text-blue-600">
                         Teach on ConnectEd
                       </Link>
                     </div>

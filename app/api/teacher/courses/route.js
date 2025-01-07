@@ -7,8 +7,8 @@ import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
 
 async function verifyAuth() {
-  const cookieStore =await cookies();
-  const token =  cookieStore.get('auth-token');
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth-token');
 
   if (!token) {
     return null;
@@ -34,6 +34,64 @@ async function verifyAuth() {
   }
 }
 
+// GET handler for fetching courses
+export async function GET(request) {
+  try {
+    const user = await verifyAuth();
+    
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page')) || 1;
+    const limit = parseInt(searchParams.get('limit')) || 10;
+    const search = searchParams.get('search');
+    const status = searchParams.get('status');
+
+    // Build query
+    const query = { teacherId: user.id };
+    if (status && status !== 'all') query.status = status;
+    if (search) {
+      query.$text = { $search: search };
+    }
+
+    // Execute query with pagination
+    const courses = await Course.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    // Get total count for pagination
+    const total = await Course.countDocuments(query);
+
+    return NextResponse.json({
+      courses,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch courses' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST handler for creating new courses
 export async function POST(req) {
   try {
     const user = await verifyAuth();
@@ -98,7 +156,8 @@ export async function POST(req) {
   }
 }
 
-export async function GET(request) {
+// PATCH handler for updating courses
+export async function PATCH(request) {
   try {
     const user = await verifyAuth();
     
@@ -109,46 +168,91 @@ export async function GET(request) {
       );
     }
 
-    await connectDB();
+    const body = await request.json();
+    const { courseId, ...updateData } = body;
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 10;
-    const search = searchParams.get('search');
-    const status = searchParams.get('status');
-
-    // Build query
-    const query = { teacherId: user.id };
-    if (status && status !== 'all') query.status = status;
-    if (search) {
-      query.$text = { $search: search };
+    if (!courseId) {
+      return NextResponse.json(
+        { error: 'Course ID is required' },
+        { status: 400 }
+      );
     }
 
-    // Execute query with pagination
-    const courses = await Course.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    await connectDB();
 
-    // Get total count for pagination
-    const total = await Course.countDocuments(query);
+    // Verify course ownership
+    const existingCourse = await Course.findOne({
+      _id: courseId,
+      teacherId: user.id
+    });
+
+    if (!existingCourse) {
+      return NextResponse.json(
+        { error: 'Course not found or unauthorized' },
+        { status: 404 }
+      );
+    }
+
+    // If updating status, validate the new status
+    if (updateData.status) {
+      if (!['draft', 'published', 'archived'].includes(updateData.status)) {
+        return NextResponse.json(
+          { error: 'Invalid status value' },
+          { status: 400 }
+        );
+      }
+
+      // If publishing, check if course has required fields
+      if (updateData.status === 'published') {
+        if (!existingCourse.title || !existingCourse.description || 
+            !existingCourse.thumbnail || !existingCourse.category ||
+            !existingCourse.sections || existingCourse.sections.length === 0) {
+          return NextResponse.json(
+            { error: 'Course must be complete before publishing' },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // Update the course
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
+      { 
+        $set: {
+          ...updateData,
+          updatedAt: new Date()
+        }
+      },
+      { 
+        new: true,
+        runValidators: true 
+      }
+    );
+
+    // Update teacher's course stats if needed
+    if (updateData.status && updateData.status !== existingCourse.status) {
+      const teacher = await Teacher.findById(user.id);
+      if (teacher && teacher.stats) {
+        const stats = { ...teacher.stats };
+        if (updateData.status === 'published') {
+          stats.activeCourses = (stats.activeCourses || 0) + 1;
+        } else if (existingCourse.status === 'published') {
+          stats.activeCourses = Math.max(0, (stats.activeCourses || 0) - 1);
+        }
+        await Teacher.findByIdAndUpdate(user.id, { stats });
+      }
+    }
 
     return NextResponse.json({
-      courses,
-      pagination: {
-        total,
-        pages: Math.ceil(total / limit),
-        page,
-        limit
-      }
+      message: 'Course updated successfully',
+      course: updatedCourse
     });
 
   } catch (error) {
-    console.error('Error fetching courses:', error);
+    console.error('Error updating course:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch courses' },
+      { error: error.message || 'Internal Server Error' },
       { status: 500 }
     );
   }

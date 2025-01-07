@@ -18,21 +18,24 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { 
   ArrowLeft, 
+  Award,  
   Calendar,
   Download,
-  Edit,
   Eye,
   Loader2,
+  Mail,
   MoreVertical,
   Pencil,
-  Settings,
   Trash,
-  Users 
+  Users, 
+  XCircle
 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format } from 'date-fns';
+import { use } from 'react';
 
 export default function TeacherEventPage({ params }) {
   const router = useRouter();
@@ -49,15 +53,16 @@ export default function TeacherEventPage({ params }) {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
+  const { eventId } =use(params)
 
   useEffect(() => {
     fetchEventData();
     fetchRegistrations();
-  }, []);
+  }, [eventId]); // Added eventId as dependency
 
   const fetchEventData = async () => {
     try {
-      const response = await fetch(`/api/teacher/events/${params.eventId}`, {
+      const response = await fetch(`/api/teacher/events/${eventId}`, {
         credentials: 'include'
       });
 
@@ -81,7 +86,7 @@ export default function TeacherEventPage({ params }) {
 
   const fetchRegistrations = async () => {
     try {
-      const response = await fetch(`/api/teacher/events/${params.eventId}/registrations`, {
+      const response = await fetch(`/api/teacher/events/${eventId}/registrations`, {
         credentials: 'include'
       });
 
@@ -104,7 +109,7 @@ export default function TeacherEventPage({ params }) {
   const handleStatusChange = async (newStatus) => {
     setStatusLoading(true);
     try {
-      const response = await fetch(`/api/teacher/events/${params.eventId}/status`, {
+      const response = await fetch(`/api/teacher/events/${eventId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +145,7 @@ export default function TeacherEventPage({ params }) {
     }
 
     try {
-      const response = await fetch(`/api/teacher/events/${params.eventId}`, {
+      const response = await fetch(`/api/teacher/events/${eventId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -166,7 +171,7 @@ export default function TeacherEventPage({ params }) {
 
   const downloadAttendeeList = async () => {
     try {
-      const response = await fetch(`/api/teacher/events/${params.eventId}/registrations/export`, {
+      const response = await fetch(`/api/teacher/events/${eventId}/registrations/export`, {
         credentials: 'include'
       });
 
@@ -285,7 +290,7 @@ export default function TeacherEventPage({ params }) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {registrations.filter(r => r.status === 'confirmed').length}
+                {registrations?.filter(r => r.status === 'confirmed').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 of {event.maximumRegistrations} maximum
@@ -302,7 +307,7 @@ export default function TeacherEventPage({ params }) {
               <div className="text-2xl font-bold">
                 ${registrations
                   .filter(r => r.status === 'confirmed')
-                  .reduce((sum, r) => sum + (r.ticketTier.price || 0), 0)
+                  .reduce((sum, r) => sum + (r?.ticketTier?.price || 0), 0)
                   .toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -346,6 +351,7 @@ export default function TeacherEventPage({ params }) {
 
             <Card>
               <Table>
+                <TableHeader>
                   <TableRow>
                     <TableHead>Attendee</TableHead>
                     <TableHead>Ticket Type</TableHead>
@@ -354,52 +360,101 @@ export default function TeacherEventPage({ params }) {
                     <TableHead>Registration Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
+                </TableHeader>
                 <TableBody>
-                  {registrations.map((registration) => (
-                    <TableRow key={registration._id}>
-                      <TableCell className="font-medium">
-                        {registration.userId?.name || 'Unknown'}
-                      </TableCell>
-                      <TableCell>{registration.ticketTier.name}</TableCell>
-                      <TableCell>${registration.ticketTier.price}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          registration.status === 'confirmed'
-                            ? 'bg-green-100 text-green-800'
-                            : registration.status === 'cancelled'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {registration.status.charAt(0).toUpperCase() + registration.status.slice(1)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(registration.registeredAt), 'PP')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              Send Message
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              Cancel Registration
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+  {registrations?.map((registration) => (
+    <TableRow key={registration.id}>
+      <TableCell className="font-medium">
+        {registration.student?.name || 'Unknown'}
+      </TableCell>
+      <TableCell>{registration.ticketTier?.name || 'N/A'}</TableCell>
+      <TableCell>${registration.ticketTier?.price || 0}</TableCell>
+      <TableCell>
+        <Badge
+          variant={
+            registration.status === 'confirmed'
+              ? 'success'
+              : registration.status === 'cancelled'
+              ? 'destructive'
+              : 'warning'
+          }
+          className="capitalize"
+        >
+          {registration.status || 'pending'}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        {registration.registeredAt
+          ? format(new Date(registration.registeredAt), 'PP')
+          : 'N/A'}
+      </TableCell>
+      <TableCell>
+        <Badge
+          variant={
+            registration.payment?.status === 'completed'
+              ? 'success'
+              : registration.payment?.status === 'failed'
+              ? 'destructive'
+              : 'secondary'
+          }
+          className="capitalize"
+        >
+          {registration.payment?.status || 'pending'}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => router.push(`/dashboard/teacher/events/${eventId}/registrations/${registration.id}`)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleSendMessage(registration)}
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Send Message
+            </DropdownMenuItem>
+            {registration.status === 'pending' && (
+              <DropdownMenuItem
+                onClick={() => handleConfirmRegistration(registration.id)}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Confirm Registration
+              </DropdownMenuItem>
+            )}
+            {registration.status === 'confirmed' && !registration.certificate?.issued && (
+              <DropdownMenuItem
+                onClick={() => handleIssueCertificate(registration.id)}
+              >
+                <Award className="h-4 w-4 mr-2" />
+                Issue Certificate
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            {registration.status !== 'cancelled' && (
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => handleCancelRegistration(registration.id)}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Cancel Registration
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
               </Table>
             </Card>
           </TabsContent>

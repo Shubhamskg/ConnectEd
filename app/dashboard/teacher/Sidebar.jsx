@@ -34,7 +34,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 h-screen bg-white border-r flex flex-col fixed">
+    <div className="w-64 h-screen bg-white border-r flex flex-col ">
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-1 p-4">
           {menuItems.map((item) => {

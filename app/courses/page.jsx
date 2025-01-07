@@ -146,7 +146,7 @@ function CourseContent() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-lg">{course.title}</CardTitle>
-                    <CardDescription>{course.instructor.name}</CardDescription>
+                    <CardDescription>{course.teacherName}</CardDescription>
                   </div>
                   <span className="text-lg font-bold">
                     ${course.price}

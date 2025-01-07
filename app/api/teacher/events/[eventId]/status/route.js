@@ -101,7 +101,7 @@ export async function PATCH(request, { params }) {
       case 'cancelled':
         // Check if event has registrations
         const registrationCount = await Registration.countDocuments({
-          eventId: event._id,
+          eventId: event?._id,
           status: 'confirmed'
         });
 
@@ -112,7 +112,7 @@ export async function PATCH(request, { params }) {
           // Update all confirmed registrations to cancelled
           await Registration.updateMany(
             {
-              eventId: event._id,
+              eventId: event?._id,
               status: 'confirmed'
             },
             {
@@ -145,7 +145,7 @@ export async function PATCH(request, { params }) {
         }
 
         const hasRegistrations = await Registration.exists({
-          eventId: event._id,
+          eventId: event?._id,
           status: { $in: ['confirmed', 'attended'] }
         });
 

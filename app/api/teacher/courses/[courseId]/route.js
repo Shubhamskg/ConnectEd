@@ -63,7 +63,7 @@ export async function GET(request, { params }) {
       );
     }
     
-    const { courseId } = params;
+    const { courseId } =await params;
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return NextResponse.json(
         { error: 'Invalid course ID' },
@@ -106,7 +106,7 @@ export async function DELETE(req, { params }) {
                     );
                   }
 
-    const { courseId } =use(params);
+    const { courseId } =await params
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return NextResponse.json(
         { error: 'Invalid course ID' },

@@ -45,7 +45,7 @@ export async function GET(req, { params }) {
                 );
               }
 
-    const { courseId } =use(params);
+    const { courseId } =await params
     await connectDB();
 
     // Verify course ownership

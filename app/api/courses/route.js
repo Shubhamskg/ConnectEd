@@ -49,7 +49,7 @@ export async function GET(request) {
       .sort(sortQuery)
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('instructor', 'name');
+      .populate('teacherId', 'name');
 
     return Response.json({
       courses,

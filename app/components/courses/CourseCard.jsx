@@ -57,14 +57,14 @@ export function CourseCard({ course }) {
             <div className="relative w-10 h-10">
               <Image
                 src={course.instructor.avatar || "/placeholders/course-1.jpeg"}
-                alt={course.instructor.name}
+                alt={course.teacherName}
                 className="rounded-full object-cover"
                 fill
               />
             </div>
             <div>
-              <p className="text-sm font-medium">{course.instructor.name}</p>
-              <p className="text-xs text-muted-foreground">{course.instructor.role}</p>
+              <p className="text-sm font-medium">{course.teacherName}</p>
+              <p className="text-xs text-muted-foreground">{course?.role}</p>
             </div>
           </div>
           <Button>View Course</Button>

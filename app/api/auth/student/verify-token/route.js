@@ -1,13 +1,10 @@
-// app/api/auth/student/verify-token/route.js
 import { connectDB } from "@/lib/mongodb";
 import Student from "@/models/Student";
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
-
-    console.log('Attempting to verify token:', token);
+    const token = searchParams.get("token");
 
     if (!token) {
       return Response.json(
@@ -17,14 +14,11 @@ export async function GET(request) {
     }
 
     await connectDB();
-
-    // Find student with exact token match
+    
     const student = await Student.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() }
     });
-
-    console.log('Found student:', student ? student.email : 'No student found');
 
     if (!student) {
       return Response.json(
@@ -33,22 +27,19 @@ export async function GET(request) {
       );
     }
 
-    // Update student verification status
     student.verified = true;
     student.verificationToken = undefined;
     student.verificationTokenExpires = undefined;
     await student.save();
 
-    console.log('Successfully verified student:', student.email);
-
-    return Response.json({ 
-      message: "Email verified successfully. You can now log in."
+    return Response.json({
+      message: "Email verified successfully",
+      redirectUrl: "/auth/student/login?success=" + encodeURIComponent("Email verified successfully. You can now log in.")
     });
-
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error("Verification error:", error);
     return Response.json(
-      { message: "Verification failed. Please try again." },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }

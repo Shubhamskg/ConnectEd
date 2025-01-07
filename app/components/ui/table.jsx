@@ -1,29 +1,91 @@
 import React from 'react';
 
-export const Table = ({ children, ...props }) => {
+export const Table = ({ children, className = '', ...props }) => {
   return (
-    <table {...props} className="table-auto w-full text-sm text-left text-gray-600">
-      {children}
-    </table>
+    <div className="relative w-full overflow-auto">
+      <table 
+        className={`w-full caption-bottom text-sm ${className}`}
+        {...props}
+      >
+        {children}
+      </table>
+    </div>
   );
 };
 
-export const TableHead = ({ children }) => {
-  return <thead className="bg-gray-100">{children}</thead>;
+export const TableHeader = ({ children, className = '', ...props }) => {
+  return (
+    <thead 
+      className={`[&_tr]:border-b ${className}`}
+      {...props}
+    >
+      {children}
+    </thead>
+  );
 };
 
-export const TableBody = ({ children }) => {
-  return <tbody>{children}</tbody>;
+export const TableBody = ({ children, className = '', ...props }) => {
+  return (
+    <tbody
+      className={`[&_tr:last-child]:border-0 ${className}`}
+      {...props}
+    >
+      {children}
+    </tbody>
+  );
 };
 
-export const TableRow = ({ children, className }) => {
-  return <tr className={className}>{children}</tr>;
+export const TableFooter = ({ children, className = '', ...props }) => {
+  return (
+    <tfoot
+      className={`border-t bg-muted/50 font-medium [&>tr]:last:border-b-0 ${className}`}
+      {...props}
+    >
+      {children}
+    </tfoot>
+  );
 };
 
-export const TableCell = ({ children, className }) => {
-  return <td className={`px-6 py-3 ${className}`}>{children}</td>;
+export const TableRow = ({ children, className = '', ...props }) => {
+  return (
+    <tr
+      className={`border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted ${className}`}
+      {...props}
+    >
+      {children}
+    </tr>
+  );
 };
 
-export const TableHeadCell = ({ children, className }) => {
-  return <th className={`px-6 py-3 ${className}`}>{children}</th>;
+export const TableHead = ({ children, className = '', ...props }) => {
+  return (
+    <th
+      className={`h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 ${className}`}
+      {...props}
+    >
+      {children}
+    </th>
+  );
+};
+
+export const TableCell = ({ children, className = '', ...props }) => {
+  return (
+    <td
+      className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 ${className}`}
+      {...props}
+    >
+      {children}
+    </td>
+  );
+};
+
+export const TableCaption = ({ children, className = '', ...props }) => {
+  return (
+    <caption
+      className={`mt-4 text-sm text-muted-foreground ${className}`}
+      {...props}
+    >
+      {children}
+    </caption>
+  );
 };

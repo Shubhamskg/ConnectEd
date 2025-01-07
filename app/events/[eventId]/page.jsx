@@ -20,6 +20,7 @@ import {
   Building,
   Globe,
 } from 'lucide-react';
+import { use } from 'react';
 
 export default function EventDetail({ params }) {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function EventDetail({ params }) {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
+  const {eventId}=use(params)
 
   useEffect(() => {
     fetchEventData();
@@ -34,7 +36,7 @@ export default function EventDetail({ params }) {
 
   const fetchEventData = async () => {
     try {
-      const response = await fetch(`/api/events/${params.eventId}`);
+      const response = await fetch(`/api/events/${eventId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch event data');
       }
@@ -55,7 +57,7 @@ export default function EventDetail({ params }) {
   const handleRegister = async () => {
     setRegistering(true);
     try {
-      const response = await fetch(`/api/events/${params.eventId}/register`, {
+      const response = await fetch(`/api/events/${eventId}/register`, {
         method: 'POST',
         credentials: 'include'
       });

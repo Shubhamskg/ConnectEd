@@ -7,8 +7,8 @@ export function FAQ  () {
 
   const faqs = [
     {
-      question: "What courses does LivEd offer?",
-      answer: "LivEd offers a wide range of online courses in healthcare, dental, and medical fields. Our courses are designed for professionals looking to enhance their skills or for students preparing for careers in these industries."
+      question: "What courses does ConnectED offer?",
+      answer: "ConnectED offers a wide range of online courses in healthcare, dental, and medical fields. Our courses are designed for professionals looking to enhance their skills or for students preparing for careers in these industries."
     },
     {
       question: "How do live online classes work?",

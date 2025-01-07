@@ -1,61 +1,55 @@
 // app/dashboard/student/page.jsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { 
-  BookOpen, 
-  GraduationCap, 
-  Clock, 
-  Star, 
-  User,
-  Mail,
-  Calendar
+  Loader2, Book, Calendar, TrendingUp, 
+  Clock, GraduationCap, Activity, Award,
+  Video, Users, MessageSquare
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const router = useRouter();
-
-  const stats = {
-    enrolledCourses: 4,
-    completionRate: 68,
-    nextDeadline: "2 days",
-    overallGrade: "A-",
-  };
+  const [stats, setStats] = useState({
+    enrolledCourses: 0,
+    completedCourses: 0,
+    upcomingEvents: 0,
+    averageProgress: 0,
+    totalAssignments: 0,
+    completionRate: 0
+  });
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const response = await fetch('/api/student/profile', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const [profileRes, statsRes] = await Promise.all([
+          fetch('/api/student/profile'),
+          fetch('/api/student/stats')
+        ]);
 
-        if (response.status === 401) {
-          router.push('/auth/student/login');
-          return;
-        }
-
-        if (!response.ok) {
+        if (!profileRes.ok) {
+          if (profileRes.status === 401) {
+            router.push('/auth/student/login');
+            return;
+          }
           throw new Error('Failed to fetch profile data');
         }
 
-        const data = await response.json();
-        setStudent(data.student);
+        const [profileData, statsData] = await Promise.all([
+          profileRes.json(),
+          statsRes.json()
+        ]);
+
+        setStudent(profileData?.student);
+        setStats(statsData);
       } catch (error) {
-        console.error('Error fetching student data:', error);
-        setError('Failed to load dashboard');
+        setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -66,157 +60,166 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-8 p-8">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <Alert variant="destructive">
-          <AlertDescription>
-            {error}. Click{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto font-normal"
-              onClick={() => router.push('/auth/student/login')}
-            >
-              here
-            </Button>{" "}
-            to login again.
-          </AlertDescription>
-        </Alert>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-red-500">Error: {error}</p>
+        <Button onClick={() => router.push('/auth/student/login')}>
+          Return to Login
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-3xl font-bold tracking-tight">My Dashboard</h2>
-        {student && (
-          <Card className="w-full md:w-auto">
-            <CardContent className="flex items-center gap-4 py-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold">{student.name}</h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-3 w-3" />
-                  {student.email}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      {/* Header Section */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Student Dashboard</h2>
+          <p className="text-muted-foreground">
+            Welcome back, {student?.name}
+          </p>
+        </div>
+        <div className="flex space-x-2">
+          <Button onClick={() => router.push('/dashboard/student/live')}>
+            <Video className="h-4 w-4 mr-2" />
+            Join Live Class
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => router.push('/dashboard/student/courses')}
+          >
+            <Book className="h-4 w-4 mr-2" />
+            Browse Courses
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Enrolled Courses</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.enrolledCourses}</div>
             <p className="text-xs text-muted-foreground">
-              2 in progress
+              Active enrollments
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Course Progress</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completionRate}%</div>
-            <Progress value={stats.completionRate} className="mt-2" />
+            <div className="text-2xl font-bold">{stats.averageProgress}%</div>
+            <p className="text-xs text-muted-foreground">
+              Average across all courses
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Next Deadline</CardTitle>
+            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
+            <p className="text-xs text-muted-foreground">
+              Events in next 7 days
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Assignments</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.nextDeadline}</div>
+            <div className="text-2xl font-bold">{stats.totalAssignments}</div>
             <p className="text-xs text-muted-foreground">
-              Assignment due
+              Due assignments
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall Grade</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Completed Courses</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.overallGrade}</div>
+            <div className="text-2xl font-bold">{stats.completedCourses}</div>
             <p className="text-xs text-muted-foreground">
-              Top 15% of class
+              Courses completed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.completionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Overall completion rate
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Course Progress Section */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Calendar className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Completed Assignment #{i + 1}</p>
-                  <p className="text-xs text-muted-foreground">2 hours ago</p>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Button 
+          variant="outline" 
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/student/assignments')}
+        >
+          <Clock className="h-6 w-6" />
+          <span>View Assignments</span>
+        </Button>
+        
+        <Button 
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/student/discussions')}
+        >
+          <MessageSquare className="h-6 w-6" />
+          <span>Join Discussions</span>
+        </Button>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Deadlines</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Clock className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Project Milestone #{i + 1}</p>
-                  <p className="text-xs text-muted-foreground">Due in {i + 1} days</p>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <Button 
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/student/events')}
+        >
+          <Calendar className="h-6 w-6" />
+          <span>Browse Events</span>
+        </Button>
+
+        <Button 
+          variant="outline"
+          className="h-24 flex flex-col items-center justify-center space-y-2"
+          onClick={() => router.push('/dashboard/student/progress')}
+        >
+          <Activity className="h-6 w-6" />
+          <span>Track Progress</span>
+        </Button>
       </div>
     </div>
   );

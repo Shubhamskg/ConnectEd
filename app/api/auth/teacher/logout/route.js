@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 
 export async function POST() {
   try {
-    cookies().delete("auth-token");
+    const cookie=await cookies()
+    cookie.delete("auth-token");
     return Response.json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);
