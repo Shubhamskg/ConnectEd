@@ -87,7 +87,7 @@ export default function TeacherDashboard() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={() => router.push('/dashboard/teacher/livestream')}>
+          <Button onClick={() => router.push('/dashboard/teacher/livestreams')}>
             <Video className="h-4 w-4 mr-2" />
             Go Live
           </Button>

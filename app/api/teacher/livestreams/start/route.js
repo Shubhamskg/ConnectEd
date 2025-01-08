@@ -37,114 +37,71 @@ async function verifyAuth() {
   }
 }
   
-  export async function POST(req) {
-    try {
-      const auth = await verifyAuth();
-      if (!auth) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-  
-      await connectDB();
-      const reqs=await req.json();
-      console.log("reqs",reqs)
-      const { title, description, courseId } = reqs
-      
-      if (!title || !description) {
-        return NextResponse.json(
-          { error: 'Missing required fields' },
-          { status: 400 }
-        );
-      }
-  
-      // Verify teacher exists
-      const teacher = await Teacher.findById(auth.id);
-      if (!teacher) {
-        return NextResponse.json(
-          { error: 'Teacher not found' },
-          { status: 404 }
-        );
-      }
-  
-      // Create livestream document
-      const livestream = {
-        teacherId: new ObjectId(auth.id),
-        teacherName: teacher.name,
-        courseId: courseId ? new ObjectId(courseId) : null,
-        title,
-        description,
-        status: 'live',
-        startedAt: new Date(),
-        attendees: [],
-        chat: [],
-        settings: {
-          isChatEnabled: true,
-          isQuestionsEnabled: true,
-          allowReplays: true
-        },
-        statistics: {
-          peakViewers: 0,
-          totalViews: 0,
-          averageWatchTime: 0,
-          interactions: 0
-        }
-      };
-  
-      const db = (await connectDB()).connection.db;
-      const result = await db.collection('livestreams').insertOne(livestream);
-  
-      // If there's a course, update it with the livestream reference
-      if (courseId) {
-        await db.collection('courses').updateOne(
-          { _id: new ObjectId(courseId) },
-          {
-            $push: {
-              livestreams: {
-                _id: result.insertedId,
-                title,
-                startedAt: livestream.startedAt
-              }
-            }
-          }
-        );
-  
-        // Create notifications for enrolled students
-        const enrolledStudents = await db.collection('enrollments')
-          .find({ courseId: new ObjectId(courseId) })
-          .toArray();
-  
-        if (enrolledStudents.length > 0) {
-          const notifications = enrolledStudents.map(enrollment => ({
-            userId: enrollment.studentId,
-            type: 'LIVESTREAM_STARTED',
-            title: 'Live Class Started',
-            message: `${teacher.name} has started a live class: ${title}`,
-            courseId: new ObjectId(courseId),
-            livestreamId: result.insertedId,
-            read: false,
-            createdAt: new Date()
-          }));
-  
-          await db.collection('notifications').insertMany(notifications);
-        }
-      }
-  
-      return NextResponse.json({
-        success: true,
-        livestreamId: result.insertedId,
-        message: 'Livestream started successfully'
-      });
-  
-    } catch (error) {
-      console.error('Error starting livestream:', error);
+export async function POST(req) {
+  try {
+    const user = await verifyAuth();
+    if (!user || user.role !== 'teacher') {
       return NextResponse.json(
-        { error: 'Internal Server Error' },
-        { status: 500 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
+
+    await connectDB();
+    const reqData = await req.json();
+    console.log("Received request data:", reqData); // Debug log
+
+    const { title, description, courseId } = reqData;
+    
+    if (!title || !description) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Create livestream document
+    const livestream = {
+      teacherId: new ObjectId(user.id),
+      teacherName: user.name,
+      courseId: courseId ? new ObjectId(courseId) : null,
+      title,
+      description,
+      status: 'live',
+      startedAt: new Date(),
+      attendees: [],
+      chat: [],
+      settings: {
+        isChatEnabled: true,
+        isQuestionsEnabled: true,
+        allowReplays: true
+      },
+      statistics: {
+        peakViewers: 0,
+        totalViews: 0,
+        averageWatchTime: 0,
+        interactions: 0
+      }
+    };
+
+    const result = await LiveStream.create(livestream);
+    console.log("Created livestream:", result); // Debug log
+
+    return NextResponse.json({
+      success: true,
+      livestreamId: result._id.toString(),
+      message: 'Livestream started successfully'
+    });
+
+  } catch (error) {
+    console.error('Error starting livestream:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal Server Error' },
+      { status: 500 }
+    );
   }
+}
+
 
 
 

@@ -6,6 +6,7 @@ import { LiveStream } from '@/models/LiveStream';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
+import Course from '@/models/Course';
 
 
 async function verifyAuth() {
@@ -38,16 +39,16 @@ async function verifyAuth() {
 export async function POST(req) {
   try {
     const user = await verifyAuth();
-                      if (!user) {
-                        return NextResponse.json(
-                          { error: 'Unauthorized' },
-                          { status: 401 }
-                        );
-                      }
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
-    const { db } = await connectDB();
+    await connectDB();
 
-    // Find the active livestream
+    // Find active livestream
     const activeLivestream = await LiveStream.findOne({
       teacherId: new ObjectId(user.id),
       status: 'live'
@@ -61,10 +62,12 @@ export async function POST(req) {
     }
 
     const endedAt = new Date();
-    const duration = Math.round((endedAt - new Date(activeLivestream.startedAt)) / 1000 / 60); // in minutes
+    const duration = Math.round(
+      (endedAt - new Date(activeLivestream.startedAt)) / 1000 / 60
+    );
 
-    // Update livestream status and statistics
-    await db.collection('livestreams').updateOne(
+    // Update livestream status
+    await LiveStream.updateOne(
       { _id: activeLivestream._id },
       {
         $set: {
@@ -78,27 +81,9 @@ export async function POST(req) {
       }
     );
 
-    // Create notifications for attendees about replay availability
-    if (activeLivestream.settings.allowReplays) {
-      const notifications = activeLivestream.attendees.map(attendeeId => ({
-        userId: attendeeId,
-        type: 'LIVESTREAM_ENDED',
-        title: 'Class Recording Available',
-        message: `The recording for "${activeLivestream.title}" is now available.`,
-        courseId: activeLivestream.courseId,
-        livestreamId: activeLivestream._id,
-        read: false,
-        createdAt: new Date()
-      }));
-
-      if (notifications.length > 0) {
-        await db.collection('notifications').insertMany(notifications);
-      }
-    }
-
     // Update course if associated
     if (activeLivestream.courseId) {
-      await db.collection('courses').updateOne(
+      await Course.updateOne(
         { _id: activeLivestream.courseId },
         {
           $set: {

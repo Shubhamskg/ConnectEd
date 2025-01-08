@@ -73,7 +73,7 @@ export function Calendar({ events, onEventClick, userType }) {
       
       <div className="grid grid-cols-7 mt-2 text-sm">
         {days.map((day, dayIdx) => {
-          const dayEvents = events.filter(event => 
+          const dayEvents = events?.filter(event => 
             format(new Date(event.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
           );
 
@@ -100,7 +100,7 @@ export function Calendar({ events, onEventClick, userType }) {
               </button>
               
               <div className="mt-8">
-                {dayEvents.map((event, eventIdx) => (
+                {dayEvents?.map((event, eventIdx) => (
                   <div
                     key={eventIdx}
                     onClick={() => onEventClick(event)}

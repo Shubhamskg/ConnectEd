@@ -180,7 +180,7 @@ export async function POST(req) {
         updatedAt: new Date()
       };
 
-      const result = await LiveStream.insertOne(livestream);
+      const result = await LiveStream.create(livestream);
 
       if (courseId) {
         // Batch process course update and notifications

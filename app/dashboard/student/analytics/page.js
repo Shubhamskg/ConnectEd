@@ -1,9 +1,8 @@
-// app/dashboard/teacher/analytics/page.js
+// app/dashboard/student/analytics/page.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -14,24 +13,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar
+  PieChart,
+  Pie,
+  Cell
 } from "recharts";
 import {
-  Users,
   Clock,
   Activity,
-  BarChart2,
-  Calendar,
-  MessageSquare
+  MessageSquare,
+  Hand,
+  Video,
+  Calendar
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const StatCard = ({ title, value, icon: Icon, description, trend }) => (
   <Card>
@@ -59,41 +60,43 @@ const StatCard = ({ title, value, icon: Icon, description, trend }) => (
   </Card>
 );
 
-export default function TeacherAnalyticsDashboard() {
+const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'];
+
+export default function StudentAnalyticsDashboard() {
   const { toast } = useToast();
   const [period, setPeriod] = useState("30");
   const [analytics, setAnalytics] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
-  const [engagementData, setEngagementData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [watchTimeData, setWatchTimeData] = useState([]);
+  const [participationData, setParticipationData] = useState([]);
 
   // Fetch analytics data
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/teacher/analytics?period=${period}`);
+      const response = await fetch(`/api/student/analytics?period=${period}`);
       if (!response.ok) throw new Error('Failed to fetch analytics');
 
       const data = await response.json();
       setAnalytics(data);
 
       // Process data for charts
-      const engagementByStream = data.streams.map(stream => ({
-        name: new Date(stream.startedAt).toLocaleDateString(),
-        engagement: stream.engagement.score,
-        participants: stream.statistics.totalViews,
-        interactions: stream.statistics.totalInteractions
-      }));
-
-      const attendanceByDay = data.attendanceByDay.map(day => ({
+      const watchTimeByDay = data.watchTimeByDay.map(day => ({
         name: new Date(day.date).toLocaleDateString(),
-        students: day.count,
-        avgWatchTime: day.averageWatchTime
+        minutes: day.watchTime,
+        interactions: day.interactions
       }));
 
-      setEngagementData(engagementByStream);
-      setAttendanceData(attendanceByDay);
+      const participation = [
+        { name: 'Attendance', value: data.attendanceRate },
+        { name: 'Chat Activity', value: data.chatParticipation },
+        { name: 'Questions Asked', value: data.questionsAsked },
+        { name: 'Hand Raises', value: data.handRaises }
+      ];
+
+      setWatchTimeData(watchTimeByDay);
+      setParticipationData(participation);
 
     } catch (error) {
       console.error('Error:', error);
@@ -111,6 +114,8 @@ export default function TeacherAnalyticsDashboard() {
     fetchAnalytics();
   }, [period]);
 
+  // app/dashboard/student/analytics/page.js (continued)
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -122,7 +127,7 @@ export default function TeacherAnalyticsDashboard() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
+        <h1 className="text-3xl font-bold">Your Learning Analytics</h1>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Select period" />
@@ -135,99 +140,141 @@ export default function TeacherAnalyticsDashboard() {
         </Select>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
-          title="Total Students"
-          value={analytics?.totalStudents || 0}
-          icon={Users}
-          trend={analytics?.studentGrowth}
-        />
-        <StatCard
-          title="Average Watch Time"
-          value={`${Math.round(analytics?.averageWatchTime || 0)}m`}
+          title="Total Watch Time"
+          value={`${Math.round(analytics?.totalWatchTime || 0)}m`}
           icon={Clock}
-          description="Per student per session"
+          description="Across all sessions"
         />
         <StatCard
-          title="Engagement Rate"
-          value={`${Math.round(analytics?.averageEngagement || 0)}%`}
+          title="Engagement Score"
+          value={`${Math.round(analytics?.engagementScore || 0)}%`}
           icon={Activity}
           trend={analytics?.engagementTrend}
         />
         <StatCard
-          title="Total Sessions"
-          value={analytics?.totalSessions || 0}
-          icon={Calendar}
-          description="Live sessions conducted"
+          title="Sessions Attended"
+          value={analytics?.sessionsAttended || 0}
+          icon={Video}
+          description={`${analytics?.attendanceRate || 0}% attendance rate`}
         />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="engagement">Engagement</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="participation">Participation</TabsTrigger>
+          <TabsTrigger value="history">Session History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Engagement Over Time */}
+            {/* Watch Time Chart */}
             <Card>
               <CardHeader>
-                <CardTitle>Engagement Over Time</CardTitle>
+                <CardTitle>Watch Time Trend</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={engagementData}>
+                    <AreaChart data={watchTimeData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip />
-                      <Line 
-                        type="monotone" 
-                        dataKey="engagement" 
-                        stroke="#2563eb" 
-                        strokeWidth={2}
+                      <Area
+                        type="monotone"
+                        dataKey="minutes"
+                        stroke="#2563eb"
+                        fill="#93c5fd"
                       />
-                    </LineChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Participation by Session */}
+            {/* Participation Breakdown */}
             <Card>
               <CardHeader>
-                <CardTitle>Participation by Session</CardTitle>
+                <CardTitle>Participation Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={attendanceData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
+                    <PieChart>
+                      <Pie
+                        data={participationData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                      >
+                        {participationData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={COLORS[index % COLORS.length]} 
+                          />
+                        ))}
+                      </Pie>
                       <Tooltip />
-                      <Bar 
-                        dataKey="students" 
-                        fill="#2563eb" 
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
+                    </PieChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Top Performing Sessions */}
+            {/* Engagement Metrics */}
             <Card>
               <CardHeader>
-                <CardTitle>Top Performing Sessions</CardTitle>
+                <CardTitle>Engagement Metrics</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics?.topSessions?.map(session => (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Chat Participation</span>
+                      <span className="font-medium">
+                        {analytics?.chatParticipation || 0}%
+                      </span>
+                    </div>
+                    <Progress value={analytics?.chatParticipation || 0} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Questions Asked</span>
+                      <span className="font-medium">
+                        {analytics?.questionsRate || 0}%
+                      </span>
+                    </div>
+                    <Progress value={analytics?.questionsRate || 0} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Hand Raises</span>
+                      <span className="font-medium">
+                        {analytics?.handRaiseRate || 0}%
+                      </span>
+                    </div>
+                    <Progress value={analytics?.handRaiseRate || 0} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Sessions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analytics?.recentSessions?.map(session => (
                     <div 
                       key={session._id}
                       className="flex items-center justify-between p-4 bg-secondary/5 rounded-lg"
@@ -236,18 +283,18 @@ export default function TeacherAnalyticsDashboard() {
                         <p className="font-medium">{session.title}</p>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-1" />
-                            {session.statistics.totalViews}
+                            <Clock className="w-4 h-4 mr-1" />
+                            {session.watchTime}m
                           </div>
                           <div className="flex items-center">
                             <MessageSquare className="w-4 h-4 mr-1" />
-                            {session.statistics.totalInteractions}
+                            {session.interactions}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">
-                          {Math.round(session.engagement.score)}%
+                          {Math.round(session.engagement)}%
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Engagement
@@ -258,39 +305,15 @@ export default function TeacherAnalyticsDashboard() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Student Engagement Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Engagement Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics?.engagementDistribution || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="range" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar 
-                        dataKey="count" 
-                        fill="#2563eb" 
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="engagement">
-          {/* More detailed engagement analytics */}
+        <TabsContent value="participation">
+          {/* Detailed participation analytics */}
         </TabsContent>
 
-        <TabsContent value="attendance">
-          {/* Detailed attendance analytics */}
+        <TabsContent value="history">
+          {/* Session history analytics */}
         </TabsContent>
       </Tabs>
     </div>

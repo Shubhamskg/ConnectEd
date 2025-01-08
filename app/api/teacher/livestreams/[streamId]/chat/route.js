@@ -6,6 +6,7 @@ import { use } from 'react';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
+import { LiveStream } from '@/models/LiveStream';
 
 async function verifyAuth() {
   const cookieStore =await cookies();
@@ -45,7 +46,7 @@ export async function POST(req, { params }) {
                         );
                       }
 
-    const { streamId } = params;
+    const { streamId } =await params;
     const { message, type = 'chat' } = await req.json();
 
     if (!message) {
@@ -58,7 +59,7 @@ export async function POST(req, { params }) {
     const { db } = await connectDB();
 
     // Find livestream and verify it's active
-    const livestream = await db.collection('livestreams').findOne({
+    const livestream = await LiveStream.findOne({
       _id: new ObjectId(streamId),
       status: 'live'
     });
@@ -100,7 +101,7 @@ export async function POST(req, { params }) {
       reactions: []
     };
 
-    await db.collection('livestreams').updateOne(
+    await LiveStream.updateOne(
       { _id: new ObjectId(streamId) },
       {
         $push: { chat: chatMessage },
@@ -122,49 +123,35 @@ export async function POST(req, { params }) {
   }
 }
 
-// Get chat messages
 export async function GET(req, { params }) {
   try {
     const user = await verifyAuth();
-                      if (!user) {
-                        return NextResponse.json(
-                          { error: 'Unauthorized' },
-                          { status: 401 }
-                        );
-                      }
-
-    const { streamId } = use(params);
-    const { searchParams } = new URL(req.url);
-    const lastMessageId = searchParams.get('lastMessageId');
-    const limit = parseInt(searchParams.get('limit')) || 50;
-
-    const { db } = await connectDB();
-
-    let query = { _id: new ObjectId(streamId) };
-
-    // If lastMessageId is provided, get only newer messages
-    const pipeline = [
-      { $match: query },
-      { $unwind: '$chat' },
-      { $sort: { 'chat.timestamp': -1 } },
-      { $limit: limit }
-    ];
-
-    if (lastMessageId) {
-      pipeline.push({
-        $match: {
-          'chat._id': { $gt: new ObjectId(lastMessageId) }
-        }
-      });
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const messages = await db.collection('livestreams')
-      .aggregate(pipeline)
-      .toArray();
+    const { streamId } =await params;
+    await connectDB();
+
+    const livestream = await LiveStream.findById(streamId)
+      .select('chat')
+      .sort({ 'chat.timestamp': -1 })
+      .limit(100)
+      .lean();
+
+    if (!livestream) {
+      return NextResponse.json(
+        { error: 'Livestream not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      messages: messages.map(m => m.chat)
+      messages: livestream.chat.reverse()
     });
 
   } catch (error) {
@@ -176,18 +163,18 @@ export async function GET(req, { params }) {
   }
 }
 
-// Moderate chat message (teacher only)
+// Moderate chat message
 export async function PATCH(req, { params }) {
   try {
     const user = await verifyAuth();
-                      if (!user) {
-                        return NextResponse.json(
-                          { error: 'Unauthorized' },
-                          { status: 401 }
-                        );
-                      }
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
-    const { streamId } = use(params);
+    const { streamId } =await params;
     const { messageId, action, value } = await req.json();
 
     if (!messageId || !action) {
@@ -197,7 +184,7 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const { db } = await connectDB();
+    await connectDB();
 
     const updateField = {
       highlight: 'isHighlighted',
@@ -212,7 +199,7 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    await db.collection('livestreams').updateOne(
+    await LiveStream.updateOne(
       {
         _id: new ObjectId(streamId),
         'chat._id': new ObjectId(messageId)

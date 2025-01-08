@@ -117,57 +117,57 @@ export async function POST(req, { params }) {
   }
 }
 
-// Leave livestream
-export async function DELETE(req, { params }) {
+export async function GET(req, { params }) {
   try {
     const user = await verifyAuth();
-                      if (!user) {
-                        return NextResponse.json(
-                          { error: 'Unauthorized' },
-                          { status: 401 }
-                        );
-                      }
-
-    const { streamId } = use(params)
-    await connectDB();
-
-    // Update participation record with total watch time
-    const participation = await db.collection('livestreamParticipation').findOne({
-      livestreamId: new ObjectId(streamId),
-      userId: new ObjectId(user.id)
-    });
-
-    if (participation) {
-      const watchTime = Math.round(
-        (new Date() - new Date(participation.joinedAt)) / 1000 / 60
-      );
-
-      await db.collection('livestreamParticipation').updateOne(
-        { _id: participation._id },
-        {
-          $set: {
-            leftAt: new Date(),
-            watchTime
-          }
-        }
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
-    // Remove from active attendees
-    await db.collection('livestreams').updateOne(
-      { _id: new ObjectId(streamId) },
+    const { streamId } =await params;
+    await connectDB();
+
+    // Get participants with user details
+    const participants = await LiveStream.aggregate([
       {
-        $pull: { attendees: new ObjectId(user.id) }
+        $match: { _id: new ObjectId(streamId) }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'attendees',
+          foreignField: '_id',
+          as: 'participants'
+        }
+      },
+      {
+        $project: {
+          'participants._id': 1,
+          'participants.name': 1,
+          'participants.email': 1,
+          statistics: 1
+        }
       }
-    );
+    ]);
+
+    if (!participants.length) {
+      return NextResponse.json(
+        { error: 'Livestream not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Left livestream successfully'
+      participants: participants[0].participants,
+      statistics: participants[0].statistics
     });
 
   } catch (error) {
-    console.error('Error leaving livestream:', error);
+    console.error('Error fetching participants:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -175,10 +175,49 @@ export async function DELETE(req, { params }) {
   }
 }
 
-// app/api/teacher/livestreams/[streamId]/participants/route.js
+// Remove participant
+export async function DELETE(req, { params }) {
+  try {
+    const user = await verifyAuth();
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
-// ... (previous code remains the same)
+    const { streamId } =await params;
+    const { userId } = await req.json();
 
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    await LiveStream.updateOne(
+      { _id: new ObjectId(streamId) },
+      {
+        $pull: { attendees: new ObjectId(userId) }
+      }
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'Participant removed successfully'
+    });
+
+  } catch (error) {
+    console.error('Error removing participant:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
 // Update activity status
 export async function PATCH(req, { params }) {
     try {
@@ -213,7 +252,7 @@ export async function PATCH(req, { params }) {
       );
   
       // Get current participants count
-      const livestream = await db.collection('livestreams').findOne(
+      const livestream = await LiveStream.findOne(
         { _id: new ObjectId(streamId) },
         { projection: { attendees: 1 } }
       );
@@ -232,85 +271,7 @@ export async function PATCH(req, { params }) {
     }
   }
   
-  // Get participant list (teacher only)
-  export async function GET(req, { params }) {
-    try {
-      const user = await verifyAuth();
-                        if (!user) {
-                          return NextResponse.json(
-                            { error: 'Unauthorized' },
-                            { status: 401 }
-                          );
-                        }
-      const { streamId } = use(params);
-      const { db } = await connectDB();
-  
-      // Get livestream participants with user details
-      const participants = await db.collection('livestreamParticipation')
-        .aggregate([
-          {
-            $match: {
-              livestreamId: new ObjectId(streamId)
-            }
-          },
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'userId',
-              foreignField: '_id',
-              as: 'user'
-            }
-          },
-          {
-            $unwind: '$user'
-          },
-          {
-            $project: {
-              _id: 1,
-              userId: 1,
-              joinedAt: 1,
-              lastActive: 1,
-              watchTime: 1,
-              interactions: 1,
-              'user.name': 1,
-              'user.email': 1,
-              'user.avatar': 1,
-              isActive: {
-                $gt: [
-                  '$lastActive',
-                  new Date(Date.now() - 5 * 60 * 1000) // Consider active if last active within 5 minutes
-                ]
-              }
-            }
-          },
-          {
-            $sort: { joinedAt: -1 }
-          }
-        ])
-        .toArray();
-  
-      // Get engagement metrics
-      const metrics = {
-        totalParticipants: participants.length,
-        activeParticipants: participants.filter(p => p.isActive).length,
-        averageWatchTime: participants.reduce((acc, p) => acc + (p.watchTime || 0), 0) / participants.length,
-        totalInteractions: participants.reduce((acc, p) => acc + (p.interactions || 0), 0)
-      };
-  
-      return NextResponse.json({
-        success: true,
-        participants,
-        metrics
-      });
-  
-    } catch (error) {
-      console.error('Error fetching participants:', error);
-      return NextResponse.json(
-        { error: 'Internal Server Error' },
-        { status: 500 }
-      );
-    }
-  }
+ 
   
   // Remove participant (teacher only)
   export async function PUT(req, { params }) {

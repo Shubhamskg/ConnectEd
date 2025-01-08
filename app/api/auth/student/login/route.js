@@ -53,7 +53,8 @@ export async function POST(request) {
     );
 
     // Set HTTP-only cookie
-    cookies().set('auth-token', token, {
+    const cookie=await cookies()
+    cookie.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

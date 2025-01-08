@@ -1,10 +1,45 @@
 // models/LiveStream.js
 import mongoose from 'mongoose';
 
+
+const recordingSchema = new mongoose.Schema({
+  filename: String,
+  duration: Number,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  status: {
+    type: String,
+    enum: ['processing', 'ready', 'error'],
+    default: 'processing'
+  },
+  error: String
+});
+
+
+
+
+const participationRecordSchema = new mongoose.Schema({
+  joinedAt: {
+    type: Date,
+    required: true
+  },
+  lastActive: {
+    type: Date,
+    required: true
+  },
+  leftAt: Date,
+  interactions: {
+    type: Number,
+    default: 0
+  }
+}, { _id: false });
+
 const livestreamSchema = new mongoose.Schema({
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Teacher',
     required: true
   },
   teacherName: {
@@ -38,13 +73,17 @@ const livestreamSchema = new mongoose.Schema({
     type: Date
   },
   duration: {
-    type: Number, // in minutes
+    type: Number,
     default: 60
   },
   attendees: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Student'
   }],
+  participationRecords: {
+    type: Map,
+    of: participationRecordSchema
+  },
   chat: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,

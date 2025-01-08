@@ -25,7 +25,7 @@ const Sidebar = () => {
     { icon: Calendar, label: 'Event', href: '/dashboard/teacher/events' },
     // { icon: FileText, label: 'Assignments', href: '/dashboard/teacher/assignments' },
     // { icon: MessageSquare, label: 'Discussions', href: '/dashboard/teacher/discussions' },
-    { icon: Video, label: 'Livestream', href: '/dashboard/teacher/livestream' },
+    { icon: Video, label: 'Livestream', href: '/dashboard/teacher/livestreams' },
     // { icon: Calendar, label: 'Calendar', href: '/dashboard/teacher/calendar' },
     // { icon: Users, label: 'Students', href: '/dashboard/teacher/students' },
     { icon: Upload, label: 'Upload Course', href: '/dashboard/teacher/courses/upload' },
