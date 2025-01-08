@@ -55,9 +55,10 @@ import {
 } from "lucide-react";
 import ChatBox from "@/components/livestream/ChatBox";
 import ParticipantsList from "@/components/livestream/ParticipantsList";
+import { use } from "react";
 
 export default function TeacherLivestreamPage({ params }) {
-  const { streamId } = params;
+  const { streamId } =use(params);
   const { user, loading } = useAuth('teacher');
   const router = useRouter();
   const { toast } = useToast();
