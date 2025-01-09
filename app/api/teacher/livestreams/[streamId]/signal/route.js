@@ -100,18 +100,4 @@ export async function POST(req, { params }) {
     }
   }
   
-  // lib/redis.js
-  import { createClient } from 'redis';
   
-  const redis = createClient({
-    url: process.env.REDIS_URL
-  });
-  
-  redis.on('error', (err) => console.error('Redis Client Error', err));
-  
-  // Connect to Redis if not already connected
-  if (!redis.isOpen) {
-    redis.connect();
-  }
-  
-  export { redis };

@@ -6,17 +6,12 @@ import { LiveStream } from '@/models/LiveStream';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
-// Initialize S3 Client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  }
-});
+import { storage } from '@/lib/firebase';
+import { 
+  ref, 
+  uploadBytes,
+  getDownloadURL
+} from 'firebase/storage';
 
 async function verifyAuth() {
   const cookieStore = await cookies();
@@ -56,6 +51,7 @@ export async function POST(req) {
     const formData = await req.formData();
     const recordingBlob = formData.get('recording');
     const streamId = formData.get('streamId');
+    const duration = formData.get('duration');
 
     if (!recordingBlob || !streamId) {
       return NextResponse.json(
@@ -68,36 +64,60 @@ export async function POST(req) {
 
     // Generate unique filename
     const filename = `recordings/${streamId}/${Date.now()}.webm`;
+    const storageRef = ref(storage, filename);
 
-    // Upload to S3
-    const uploadCommand = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET,
-      Key: filename,
-      Body: Buffer.from(await recordingBlob.arrayBuffer()),
-      ContentType: 'video/webm'
-    });
+    try {
+      // Convert Blob to ArrayBuffer
+      const buffer = await recordingBlob.arrayBuffer();
 
-    await s3Client.send(uploadCommand);
+      // Upload to Firebase Storage with metadata
+      const uploadResult = await uploadBytes(storageRef, buffer, {
+        contentType: 'video/webm',
+        customMetadata: {
+          teacherId: user.id,
+          streamId,
+          duration: duration?.toString() || '0',
+          uploadedAt: new Date().toISOString()
+        }
+      });
 
-    // Update livestream record
-    await LiveStream.updateOne(
-      { _id: new ObjectId(streamId) },
-      {
-        $push: {
-          recordings: {
-            _id: new ObjectId(),
-            filename,
-            duration: formData.get('duration'),
-            createdAt: new Date()
+      // Get the download URL
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+
+      // Update livestream record
+      await LiveStream.updateOne(
+        { _id: new ObjectId(streamId) },
+        {
+          $push: {
+            recordings: {
+              _id: new ObjectId(),
+              filename,
+              url: downloadURL,
+              duration: parseInt(duration) || 0,
+              size: uploadResult.metadata.size,
+              contentType: uploadResult.metadata.contentType,
+              createdAt: new Date()
+            }
           }
         }
-      }
-    );
+      );
 
-    return NextResponse.json({
-      success: true,
-      message: 'Recording saved successfully'
-    });
+      return NextResponse.json({
+        success: true,
+        message: 'Recording saved successfully',
+        data: {
+          url: downloadURL,
+          filename
+        }
+      });
+
+    } catch (uploadError) {
+      console.error('Firebase upload error:', uploadError);
+      return NextResponse.json(
+        { error: 'Failed to upload recording' },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
     console.error('Error saving recording:', error);
@@ -108,3 +128,52 @@ export async function POST(req) {
   }
 }
 
+// Optional: Get recording status or list
+export async function GET(req) {
+  try {
+    const user = await verifyAuth();
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const streamId = searchParams.get('streamId');
+
+    if (!streamId) {
+      return NextResponse.json(
+        { error: 'Stream ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    // Get recordings for this stream
+    const livestream = await LiveStream.findOne(
+      { _id: new ObjectId(streamId) },
+      { recordings: 1 }
+    );
+
+    if (!livestream) {
+      return NextResponse.json(
+        { error: 'Livestream not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      recordings: livestream.recordings || []
+    });
+
+  } catch (error) {
+    console.error('Error fetching recordings:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
