@@ -6,7 +6,7 @@ import { connectDB } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 import Student from '@/models/Student';
-import { redis } from '@/lib/redis'; // Redis client for signaling
+import  redis  from '@/lib/redis'; // Redis client for signaling
 
 const REDIS_CHANNEL_PREFIX = 'livestream:';
 const ICE_SERVERS = [
