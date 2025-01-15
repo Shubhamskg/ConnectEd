@@ -3,24 +3,52 @@ import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
 import Student from "@/models/Student";
 import Enrollment from "@/models/Enrollment";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+
+async function verifyAuth() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth-token');
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
+    const student = await Student.findById(decoded.userId).select('-password');
+
+    if (!student) {
+      return null;
+    }
+
+    return {
+      id: student._id.toString(),
+      name: student.name,
+      email: student.email,
+      role: 'student'
+    };
+  } catch (error) {
+    console.error('Auth verification error:', error);
+    return null;
+  }
+}
 
 export async function POST(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return Response.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const user = await verifyAuth();
+        
+        if (!user) {
+          return NextResponse.json(
+            { error: 'Unauthorized' },
+            { status: 401 }
+          );
+        }
 
     await connectDB();
 
     // Verify student
-    const student = await Student.findById(session.user.id);
+    const student = await Student.findById(user.id);
     if (!student) {
       return Response.json(
         { message: "Student not found" },

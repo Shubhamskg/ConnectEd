@@ -1,14 +1,43 @@
 // app/api/categories/request/route.js
 import { connectDB } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/api/auth/[...nextauth]/route';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+
+async function verifyAuth() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth-token');
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
+    const student = await Student.findById(decoded.userId).select('-password');
+
+    if (!student) {
+      return null;
+    }
+
+    return {
+      id: student._id.toString(),
+      name: student.name,
+      email: student.email,
+      role: 'student'
+    };
+  } catch (error) {
+    console.error('Auth verification error:', error);
+    return null;
+  }
+}
+
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== 'teacher') {
+    const user = await verifyAuth();
+        
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -30,9 +59,9 @@ export async function POST(request) {
       subject,
       description,
       qualifications,
-      teacherId: session.user.id,
-      teacherName: session.user.name,
-      teacherEmail: session.user.email,
+      teacherId: user.id,
+      teacherName: user.name,
+      teacherEmail: user.email,
       status: 'pending',
       createdAt: new Date(),
     });
