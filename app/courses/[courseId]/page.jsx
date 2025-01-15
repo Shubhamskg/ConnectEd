@@ -88,6 +88,7 @@ export default function CourseDetailsPage({ params }) {
       }
   
       setEnrolling(true);
+      setLoading(false)
   
       // Show success toast
       toast.success(data.message || 'Successfully enrolled in course');
