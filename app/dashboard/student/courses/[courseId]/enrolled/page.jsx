@@ -40,7 +40,7 @@ export default function CourseDetailsPage({ params }) {
   const { courseId } =use(params)
 
   const [course, setCourse] = useState(null);
-  const [enrollment, setEnrollment] = useState(null);
+  const [enrollment, setEnrollment] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   // const [processingPurchase, setProcessingPurchase] = useState(false);
@@ -52,7 +52,7 @@ export default function CourseDetailsPage({ params }) {
         if (!response.ok) throw new Error('Failed to fetch course details');
         const data = await response.json();
         setCourse(data.course);
-        setEnrollment(data.enrollment);
+        // setEnrollment(data.enrollment);
       } catch (error) {
         setError(error.message);
       } finally {
