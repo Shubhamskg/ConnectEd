@@ -116,7 +116,7 @@ export default function StudentCoursesPage() {
         {isEnrolled ? (
           <Button 
             className="w-full"
-            onClick={() => router.push(`/dashboard/student/courses/${course.id}`)}
+            onClick={() => router.push(`/dashboard/student/courses/${course.id}/enrolled`)}
           >
             Continue Learning
           </Button>
