@@ -34,6 +34,26 @@ const StudentSchema = new mongoose.Schema({
   verificationTokenExpires: Date,
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  profile: {
+    avatar: String,
+    bio: String,
+    location: String,
+    website: String,
+    education: [{
+      school: String,
+      degree: String,
+      field: String,
+      startDate: Date,
+      endDate: Date,
+      current: Boolean
+    }],
+    skills: [String],
+    socialLinks: {
+      linkedin: String,
+      github: String,
+      twitter: String
+    }
+  }
 }, {
   timestamps: true
 });

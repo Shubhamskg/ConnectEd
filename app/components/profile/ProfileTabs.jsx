@@ -18,7 +18,7 @@ export function ProfileTabs({ user, isEditable }) {
         >
           About
         </TabsTrigger>
-        {isTeacher ? (
+        {/* {isTeacher ? (
           <>
             <TabsTrigger
               value="teaching"
@@ -48,7 +48,7 @@ export function ProfileTabs({ user, isEditable }) {
               Certifications
             </TabsTrigger>
           </>
-        )}
+        )} */}
       </TabsList>
       <div className="mt-6">
         <TabsContent value="about">
