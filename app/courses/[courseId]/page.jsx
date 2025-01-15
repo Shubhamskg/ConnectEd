@@ -71,6 +71,7 @@ export default function CourseDetailsPage({ params }) {
     }
   
     try {
+      // Make the API call to enroll
       const response = await fetch(`/api/courses/${courseId}/enroll`, {
         method: 'POST',
         headers: {
@@ -80,20 +81,26 @@ export default function CourseDetailsPage({ params }) {
   
       const data = await response.json();
   
+      // Check if the response is not OK
       if (!response.ok) {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Failed to enroll in course');
       }
   
+      setEnrolling(true);
+  
       // Show success toast
-      toast.success('Successfully enrolled in course');
-      
+      toast.success(data.message || 'Successfully enrolled in course');
+  
       // Redirect to course content
       router.push(`/dashboard/student/courses/${courseId}`);
     } catch (error) {
       console.error('Enrollment error:', error);
-      toast.error(error.message || 'Failed to enroll in course');
+  
+      // Show error toast with meaningful error message
+      toast.error(error.message || 'An unexpected error occurred. Please try again.');
     }
   };
+  
 
   if (loading) {
     return (

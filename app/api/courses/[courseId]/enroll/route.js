@@ -51,7 +51,7 @@ export async function POST(request, { params }) {
     const student = await Student.findById(user.id);
     if (!student) {
       return Response.json(
-        { message: "Student not found" },
+        { success: false, message: "Student not found" },
         { status: 404 }
       );
     }
@@ -60,7 +60,7 @@ export async function POST(request, { params }) {
     const course = await Course.findById(params.courseId);
     if (!course) {
       return Response.json(
-        { message: "Course not found" },
+        { success: false, message: "Course not found"},
         { status: 404 }
       );
     }
@@ -73,7 +73,7 @@ export async function POST(request, { params }) {
 
     if (existingEnrollment) {
       return Response.json(
-        { message: "Already enrolled in this course" },
+        { success: false, message: "Already enrolled in this course"},
         { status: 400 }
       );
     }
@@ -91,15 +91,15 @@ export async function POST(request, { params }) {
       $inc: { enrolledStudents: 1 }
     });
 
-    return Response.json({
-      message: "Successfully enrolled in course",
-      enrollment
-    });
+    return Response.json(
+      { success: true, message: "Successfully enrolled in course", enrollment },
+      { status: 200 }
+    );
 
   } catch (error) {
     console.error('Enrollment error:', error);
     return Response.json(
-      { message: "Failed to enroll in course" },
+      { success: false, message:"Failed to enroll in course" },
       { status: 500 }
     );
   }
