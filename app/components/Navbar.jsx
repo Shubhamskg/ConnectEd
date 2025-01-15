@@ -86,9 +86,9 @@ export function Navbar() {
   };
 
   const categories = [
-    { name: "Dentistry", href: "/courses/dentistry" },
-    { name: "Medical", href: "/courses/medical" },
-    { name: "Nursing", href: "/courses/nursing" },
+    { name: "Dentistry", href: "/courses/category/dentistry" },
+    { name: "Medical", href: "/courses/category/medical" },
+    { name: "Nursing", href: "/courses/category/nursing" },
   ];
 
   const getNavItems = () => {
