@@ -3,7 +3,7 @@
 
 import { useEffect, useState,use } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useuser } from 'next-auth/react';
 import {
   Card,
   CardContent,
@@ -25,15 +25,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CourseDetailsPage({ params }) {
   const router = useRouter();
-  const { data: session } = useSession();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
+  const [user,setUser]=useState(null)
   const {courseId}=use(params)
   useEffect(() => {
+    checkAuth()
     fetchCourseDetails();
   }, [courseId]);
-
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/check', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
   const fetchCourseDetails = async () => {
     try {
       const response = await fetch(`/api/courses/${courseId}`);
@@ -50,7 +63,7 @@ export default function CourseDetailsPage({ params }) {
   };
 
   const handleEnroll = async () => {
-    if (!session) {
+    if (!user) {
       router.push(`/auth/student/login?redirect=/courses/${courseId}`);
       return;
     }
@@ -223,7 +236,7 @@ export default function CourseDetailsPage({ params }) {
       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       Enrolling...
     </>
-  ) : session ? (
+  ) : user ? (
     'Enroll Now'
   ) : (
     'Login to Enroll'
