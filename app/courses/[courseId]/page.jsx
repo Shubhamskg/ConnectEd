@@ -1,9 +1,8 @@
 // app/courses/[courseId]/page.jsx
 'use client';
 
-import { useEffect, useState,use } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useuser } from 'next-auth/react';
 import {
   Card,
   CardContent,
@@ -31,17 +30,20 @@ export default function CourseDetailsPage({ params }) {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
-  const [user,setUser]=useState(null)
-  const {courseId}=use(params)
+  const [user, setUser] = useState(null);
+  const { courseId } = params;
+
   useEffect(() => {
-    checkAuth()
+    checkAuth();
     fetchCourseDetails();
   }, [courseId]);
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/check', {
-        credentials: 'include'
+        credentials: 'include',
       });
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
@@ -50,6 +52,7 @@ export default function CourseDetailsPage({ params }) {
       console.error('Auth check error:', error);
     }
   };
+
   const fetchCourseDetails = async () => {
     try {
       const response = await fetch(`/api/courses/${courseId}`);
@@ -66,43 +69,47 @@ export default function CourseDetailsPage({ params }) {
   };
 
   const handleEnroll = async () => {
-    setEnrolling(true)
+    setEnrolling(true);
+
     if (!user) {
       router.push(`/auth/student/login?redirect=/courses/${courseId}`);
+      setEnrolling(false);
       return;
     }
-  
+
     try {
-      // Make the API call to enroll
       const response = await fetch(`/api/courses/${courseId}/enroll`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
-  
+
       const data = await response.json();
-  
-      // Check if the response is not OK
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to enroll in course');
       }
-  
-      setEnrolling(false);
-  
-      // Show success toast
-      toast.success(data.message || 'Successfully enrolled in course');
-  
-      // Redirect to course content
+
+      toast({
+        title: 'Success',
+        description: data.message || 'Successfully enrolled in course',
+        status: 'success',
+      });
+
       router.push(`/dashboard/student/courses/${courseId}`);
     } catch (error) {
       console.error('Enrollment error:', error);
-  
-      // Show error toast with meaningful error message
-      toast.error(error.message || 'An unexpected error occurred. Please try again.');
+
+      toast({
+        title: 'Error',
+        description: error.message || 'An unexpected error occurred. Please try again.',
+        status: 'error',
+      });
+    } finally {
+      setEnrolling(false);
     }
   };
-  
 
   if (loading) {
     return (
@@ -133,13 +140,11 @@ export default function CourseDetailsPage({ params }) {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid gap-8 md:grid-cols-3">
-        {/* Main Content */}
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold mb-4">{course.title}</h1>
           <p className="text-lg text-muted-foreground mb-6">
             {course.description}
           </p>
-
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
@@ -158,17 +163,12 @@ export default function CourseDetailsPage({ params }) {
               <span>{course.level}</span>
             </div>
           </div>
-
-          {/* Course Content Preview */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Course Content</CardTitle>
-              <CardDescription>
-                A comprehensive curriculum designed by industry experts
-              </CardDescription>
+              <CardDescription>A comprehensive curriculum designed by industry experts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Sample course content - Replace with real data */}
               {[1, 2, 3].map((module) => (
                 <div 
                   key={module}
@@ -186,8 +186,6 @@ export default function CourseDetailsPage({ params }) {
               ))}
             </CardContent>
           </Card>
-
-          {/* What You'll Learn */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>What You'll Learn</CardTitle>
@@ -203,8 +201,6 @@ export default function CourseDetailsPage({ params }) {
               </div>
             </CardContent>
           </Card>
-
-          {/* Instructor Info */}
           <Card>
             <CardHeader>
               <CardTitle>Your Instructor</CardTitle>
@@ -216,13 +212,12 @@ export default function CourseDetailsPage({ params }) {
               <div>
                 <h3 className="font-medium text-lg">{course.teacherName}</h3>
                 <p className="text-muted-foreground">{course.status}</p>
-                <p className="mt-2">Expert instructor with years of practical experience in the medical field.</p>
+                <p className="mt-2">Expert instructor with years of practical experience in the field.</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div>
           <Card className="sticky top-8">
             <CardContent className="p-6">
@@ -237,22 +232,22 @@ export default function CourseDetailsPage({ params }) {
                 ${course.price}
               </div>
               <Button 
-  className="w-full mb-4"
-  size="lg"
-  onClick={handleEnroll}
-  disabled={enrolling}
->
-  {enrolling ? (
-    <>
-      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      Enrolling...
-    </>
-  ) : user ? (
-    'Enroll Now'
-  ) : (
-    'Login to Enroll'
-  )}
-</Button>
+                className="w-full mb-4"
+                size="lg"
+                onClick={handleEnroll}
+                disabled={enrolling}
+              >
+                {enrolling ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enrolling...
+                  </>
+                ) : user ? (
+                  'Enroll Now'
+                ) : (
+                  'Login to Enroll'
+                )}
+              </Button>
               <div className="space-y-4 text-sm">
                 <div className="flex gap-2">
                   <Clock className="h-5 w-5 text-muted-foreground" />
