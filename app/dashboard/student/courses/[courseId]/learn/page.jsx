@@ -31,10 +31,10 @@ export default function CourseLearnPage({ params }) {
         setEnrollment(data.enrollment);
 
         // If there's no enrollment, redirect to course details
-        if (!data.enrollment) {
-          router.push(`/dashboard/student/courses/${courseId}`);
-          return;
-        }
+        // if (!data.enrollment) {
+        //   router.push(`/dashboard/student/courses/${courseId}`);
+        //   return;
+        // }
 
         // If there is an enrollment, redirect to the first uncompleted lesson
         const firstUncompletedLesson = findFirstUncompletedLesson(
