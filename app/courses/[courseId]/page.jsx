@@ -66,6 +66,7 @@ export default function CourseDetailsPage({ params }) {
   };
 
   const handleEnroll = async () => {
+    setEnrolling(true)
     if (!user) {
       router.push(`/auth/student/login?redirect=/courses/${courseId}`);
       return;
@@ -87,8 +88,7 @@ export default function CourseDetailsPage({ params }) {
         throw new Error(data.message || 'Failed to enroll in course');
       }
   
-      setEnrolling(true);
-      setLoading(false)
+      setEnrolling(false);
   
       // Show success toast
       toast.success(data.message || 'Successfully enrolled in course');
