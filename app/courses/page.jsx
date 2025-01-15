@@ -30,14 +30,29 @@ function CourseContent() {
   const searchParams = useSearchParams();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user,setUser]=useState(null)
   const [filters, setFilters] = useState({
     domain: searchParams.get('domain') || 'all',
     level: searchParams.get('level') || 'all',
     sort: searchParams.get('sort') || 'newest',
     search: searchParams.get('search') || '',
   });
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/check', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
 
   useEffect(() => {
+    checkAuth()
     fetchCourses();
   }, [filters]);
 
@@ -69,7 +84,7 @@ function CourseContent() {
   };
 
   const handleCourseClick = (courseId) => {
-    if (session) {
+    if (user) {
       router.push(`/courses/${courseId}`);
     } else {
       router.push(`/auth/student/login?redirect=/courses/${courseId}`);
