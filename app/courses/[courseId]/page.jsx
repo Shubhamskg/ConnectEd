@@ -22,8 +22,10 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from "@/components/ui/use-toast";
 
 export default function CourseDetailsPage({ params }) {
+  const { toast } = useToast();
   const router = useRouter();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
