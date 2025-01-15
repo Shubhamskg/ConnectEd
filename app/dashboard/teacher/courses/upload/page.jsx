@@ -33,16 +33,19 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { CourseCategories } from '@/components/course-categories';
 
-const CATEGORIES = [
-  'Web Development',
-  'Mobile Development',
-  'Data Science',
-  'Machine Learning',
-  'DevOps',
-  'Cloud Computing',
-  'Cybersecurity',
-  'Blockchain',
-  'Game Development',
+export const CATEGORIES = [
+  // 'Web Development',
+  // 'Mobile Development',
+  // 'Data Science',
+  // 'Machine Learning',
+  // 'DevOps',
+  // 'Cloud Computing',
+  // 'Cybersecurity',
+  // 'Blockchain',
+  // 'Game Development',
+  'Dentistry',
+  'Medical',
+  'Nursing',
   'Other'
 ];
 

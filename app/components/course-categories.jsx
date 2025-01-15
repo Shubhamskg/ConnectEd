@@ -10,15 +10,18 @@ import {
 import { Input } from "@/components/ui/input";
 
 export const CATEGORIES = [
-  'Web Development',
-  'Mobile Development',
-  'Data Science',
-  'Machine Learning',
-  'DevOps',
-  'Cloud Computing',
-  'Cybersecurity',
-  'Blockchain',
-  'Game Development',
+  // 'Web Development',
+  // 'Mobile Development',
+  // 'Data Science',
+  // 'Machine Learning',
+  // 'DevOps',
+  // 'Cloud Computing',
+  // 'Cybersecurity',
+  // 'Blockchain',
+  // 'Game Development',
+  'Dentistry',
+  'Medical',
+  'Nursing',
   'Other'
 ];
 

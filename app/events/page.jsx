@@ -24,15 +24,19 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const CATEGORIES = [
-  'All Categories',
-  'Technology',
-  'Business',
-  'Design',
-  'Marketing',
-  'Development',
-  'Data Science',
-  'AI & ML',
+export const CATEGORIES = [
+  // 'Web Development',
+  // 'Mobile Development',
+  // 'Data Science',
+  // 'Machine Learning',
+  // 'DevOps',
+  // 'Cloud Computing',
+  // 'Cybersecurity',
+  // 'Blockchain',
+  // 'Game Development',
+  'Dentistry',
+  'Medical',
+  'Nursing',
   'Other'
 ];
 

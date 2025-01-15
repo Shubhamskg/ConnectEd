@@ -58,15 +58,20 @@ export default function StudentEventsPage() {
     fetchEvents();
   }, []);
 
-  const categories = [
-    'All',
-    'Technology',
-    'Business',
-    'Design',
-    'Marketing',
-    'Education',
-    'Health',
-    'Others'
+   const categories = [
+    // 'Web Development',
+    // 'Mobile Development',
+    // 'Data Science',
+    // 'Machine Learning',
+    // 'DevOps',
+    // 'Cloud Computing',
+    // 'Cybersecurity',
+    // 'Blockchain',
+    // 'Game Development',
+    'Dentistry',
+    'Medical',
+    'Nursing',
+    'Other'
   ];
 
   const eventTypes = [

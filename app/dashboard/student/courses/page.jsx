@@ -57,15 +57,20 @@ export default function StudentCoursesPage() {
     fetchCourses();
   }, []);
 
-  const categories = [
-    'All',
-    'Programming',
-    'Design',
-    'Business',
-    'Marketing',
-    'Science',
-    'Language',
-    'Mathematics'
+   const categories = [
+    // 'Web Development',
+    // 'Mobile Development',
+    // 'Data Science',
+    // 'Machine Learning',
+    // 'DevOps',
+    // 'Cloud Computing',
+    // 'Cybersecurity',
+    // 'Blockchain',
+    // 'Game Development',
+    'Dentistry',
+    'Medical',
+    'Nursing',
+    'Other'
   ];
 
   const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
