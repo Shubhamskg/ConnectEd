@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -17,7 +17,26 @@ import {
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/check', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
 
   const menuItems = [
     { 
@@ -25,11 +44,11 @@ const Sidebar = () => {
       label: 'Dashboard', 
       href: '/dashboard/teacher' 
     },
-    { 
-      icon: BarChart2, 
-      label: 'Analytics', 
-      href: '/dashboard/teacher/analytics' 
-    },
+    // { 
+    //   icon: BarChart2, 
+    //   label: 'Analytics', 
+    //   href: '/dashboard/teacher/analytics' 
+    // },
     { 
       icon: Book, 
       label: 'Courses', 
@@ -40,21 +59,16 @@ const Sidebar = () => {
       label: 'Event', 
       href: '/dashboard/teacher/events' 
     },
-    { 
-      icon: Video, 
-      label: 'Livestream', 
-      href: '/dashboard/teacher/livestreams' 
-    },
-    { 
-      icon: Upload, 
-      label: 'Upload Course', 
-      href: '/dashboard/teacher/courses/upload' 
-    },
-    { 
-      icon: Settings, 
-      label: 'Settings', 
-      href: '/dashboard/teacher/settings' 
-    }
+    // { 
+    //   icon: Upload, 
+    //   label: 'Upload Course', 
+    //   href: '/dashboard/teacher/courses/upload' 
+    // },
+    // { 
+    //   icon: Settings, 
+    //   label: 'Settings', 
+    //   href: '/dashboard/teacher/settings' 
+    // }
   ];
 
   return (
@@ -74,17 +88,7 @@ const Sidebar = () => {
         )}
       </button>
 
-      {/* Logo Section */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-center">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Book className="h-6 w-6 text-white" />
-          </div>
-          {!isCollapsed && (
-            <span className="ml-3 font-bold text-lg">Teacher Portal</span>
-          )}
-        </div>
-      </div>
+    
 
       {/* Navigation Menu */}
       <nav className="flex-1 overflow-y-auto p-4">
@@ -125,10 +129,10 @@ const Sidebar = () => {
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-700 truncate">
-                Teacher Name
+                {user?.name || 'Loading...'}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                teacher@example.com
+                {user?.email || 'Loading...'}
               </p>
             </div>
           )}

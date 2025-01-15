@@ -31,6 +31,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { CourseCategories } from '@/components/course-categories';
 
 const CATEGORIES = [
   'Web Development',
@@ -425,23 +426,12 @@ export default function CourseUpload() {
                   required
                 />
                 
-                <Select
-                  value={courseData.category}
-                  onValueChange={(value) => 
-                    setCourseData(prev => ({ ...prev, category: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                
+                  <CourseCategories
+  value={courseData.category}
+  onChange={(value) => setCourseData(prev => ({ ...prev, category: value }))}
+/>
+                  
               </div>
 
               <Select

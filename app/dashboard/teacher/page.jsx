@@ -1,14 +1,19 @@
-// app/dashboard/teacher/page.jsx
-"use client";
-
+"use client"
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Loader2, Book, Users, Calendar, TrendingUp, 
-  Plus, Clock, DollarSign, BarChart2, Video 
+import {
+  Loader2, Book, Users, Calendar, TrendingUp,
+  Clock, DollarSign, BarChart2, Upload, MessageSquare,
+  Video
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -44,7 +49,7 @@ export default function TeacherDashboard() {
           profileRes.json(),
           statsRes.json()
         ]);
-        console.log("profileData",profileData)
+        
         setTeacher(profileData?.teacher);
         setStats(statsData);
       } catch (error) {
@@ -56,6 +61,14 @@ export default function TeacherDashboard() {
 
     fetchTeacherData();
   }, [router]);
+
+  const handleUpload = (type) => {
+    if (type === 'live') {
+      router.push('/dashboard/teacher/livestreams');
+    } else {
+      router.push('/dashboard/teacher/courses/upload');
+    }
+  };
 
   if (loading) {
     return (
@@ -86,18 +99,23 @@ export default function TeacherDashboard() {
             Welcome back, {teacher?.name}
           </p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => router.push('/dashboard/teacher/livestreams')}>
-            <Video className="h-4 w-4 mr-2" />
-            Go Live
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => router.push('/dashboard/teacher/courses/upload')}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Upload Course
-          </Button>
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Content
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleUpload('live')}>
+                Go Live
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpload('recorded')}>
+                Upload Course
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -135,9 +153,7 @@ export default function TeacherDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {/* ${stats.totalEarnings.toLocaleString()} */}{stats.totalEarnings}
-            </div>
+            <div className="text-2xl font-bold">${stats.totalEarnings}</div>
             <p className="text-xs text-muted-foreground">
               Lifetime earnings
             </p>
@@ -157,7 +173,7 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Course Completion</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -170,9 +186,9 @@ export default function TeacherDashboard() {
               Average completion rate
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Assignments</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -183,47 +199,66 @@ export default function TeacherDashboard() {
               Active assignments
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Button 
-          variant="outline" 
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/teacher/assignments')}
-        >
-          <Clock className="h-6 w-6" />
-          <span>Create Assignment</span>
-        </Button>
-        
-        <Button 
-          variant="outline"
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/teacher/discussions')}
-        >
-          {/* <MessageSquare className="h-6 w-6" /> */}
-          <span>Start Discussion</span>
-        </Button>
+      <Button 
+    variant="outline"
+    className="h-24 flex flex-col items-center justify-center space-y-2"
+    onClick={() => router.push('/dashboard/teacher/courses/upload')}
+  >
+    <Book className="h-6 w-6" />
+    <span>Create Course</span>
+  </Button>
+  <Button 
+    variant="outline" 
+    className="h-24 flex flex-col items-center justify-center space-y-2"
+    onClick={() => router.push('/dashboard/teacher/assignments')}
+  >
+    <Clock className="h-6 w-6" />
+    <span>Create Assignment</span>
+  </Button>
+  
+  
 
-        <Button 
-          variant="outline"
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/teacher/analytics')}
-        >
-          <BarChart2 className="h-6 w-6" />
-          <span>View Analytics</span>
-        </Button>
+  {/* <Button 
+    variant="outline"
+    className="h-24 flex flex-col items-center justify-center space-y-2"
+    onClick={() => router.push('/dashboard/teacher/livestreams/create')}
+  >
+    <Video className="h-6 w-6" />
+    <span>Start Live Session</span>
+  </Button> */}
 
-        <Button 
-          variant="outline"
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/teacher/students')}
-        >
-          <Users className="h-6 w-6" />
-          <span>Manage Students</span>
-        </Button>
-      </div>
+  <Button 
+    variant="outline"
+    className="h-24 flex flex-col items-center justify-center space-y-2"
+    onClick={() => router.push('/dashboard/teacher/discussions')}
+  >
+    <MessageSquare className="h-6 w-6" />
+    <span>Start Discussion</span>
+  </Button>
+
+  {/* <Button 
+    variant="outline"
+    className="h-24 flex flex-col items-center justify-center space-y-2"
+    onClick={() => router.push('/dashboard/teacher/analytics')}
+  >
+    <BarChart2 className="h-6 w-6" />
+    <span>View Analytics</span>
+  </Button> */}
+
+  <Button 
+    variant="outline"
+    className="h-24 flex flex-col items-center justify-center space-y-2"
+    onClick={() => router.push('/dashboard/teacher/students')}
+  >
+    <Users className="h-6 w-6" />
+    <span>Manage Students</span>
+  </Button>
+</div>
     </div>
   );
 }
