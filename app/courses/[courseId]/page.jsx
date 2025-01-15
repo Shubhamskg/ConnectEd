@@ -19,7 +19,8 @@ import {
   Users,
   PlayCircle,
   CheckCircle,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from "@/components/ui/use-toast";
