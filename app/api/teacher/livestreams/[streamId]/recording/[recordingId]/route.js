@@ -120,7 +120,7 @@ export async function POST(req, { params }) {
       );
     }
 
-    const { streamId } = params;
+    const { streamId } =await params;
     const formData = await req.formData();
     const recordingBlob = formData.get('recording');
     const duration = formData.get('duration');

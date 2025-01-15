@@ -115,8 +115,9 @@ export function Navbar() {
         isScrolled ? "shadow-sm" : ""
       }`}
     >
+      
       <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
-        {/* Logo */}
+      {/* Logo */}
         <Link href={user?`/dashboard/${user.role}`:"/"} className="flex items-center space-x-0">
           <img 
             src="/logo2.png" 

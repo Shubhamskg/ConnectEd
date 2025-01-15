@@ -31,15 +31,17 @@ const StudentSchema = new mongoose.Schema({
     default: false
   },
   verificationToken: String,
-  verificationTokenExpires: Date
+  verificationTokenExpires: Date,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
 }, {
   timestamps: true
 });
-
 // Hash password before saving
 StudentSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
+  if (!this.isModified('password')) {
+    return next();
+  }
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -49,13 +51,21 @@ StudentSchema.pre('save', async function(next) {
   }
 });
 
-// Method to compare password
+// Method to compare passwords
 StudentSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Clear existing models to prevent OverwriteModelError
+StudentSchema.methods.isResetTokenValid = function(token) {
+  return this.resetPasswordToken === token && 
+         this.resetPasswordExpires > Date.now();
+};
+// Ensure this model hasn't been compiled before
 mongoose.models = {};
 
 const Student = mongoose.model('Student', StudentSchema);
 export default Student;
+
+
+
+

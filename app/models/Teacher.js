@@ -85,6 +85,10 @@ const TeacherSchema = new mongoose.Schema({
   timestamps: true
 });
 
+TeacherSchema.methods.isResetTokenValid = function(token) {
+  return this.resetPasswordToken === token && 
+         this.resetPasswordExpires > Date.now();
+};
 // Hash password before saving
 TeacherSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
@@ -111,6 +115,7 @@ TeacherSchema.set('toJSON', {
     return ret;
   }
 });
+mongoose.models = {};
 
-const Teacher = mongoose.models.Teacher || mongoose.model('Teacher', TeacherSchema);
+const Teacher = mongoose.model('Teacher', TeacherSchema);
 export default Teacher;

@@ -1,8 +1,7 @@
 // app/api/auth/student/forgot-password/route.js
-import { NextResponse } from 'next/server';
+import { connectDB } from "@/lib/mongodb";
+import Student from "@/models/Student";
 import crypto from 'crypto';
-import { connectDB } from '@/lib/mongodb';
-import User from '@/lib/models/User';
 import { sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(request) {
@@ -10,51 +9,62 @@ export async function POST(request) {
     await connectDB();
     
     const { email } = await request.json();
-    console.log('Received student forgot password request for:', email);
 
-    const user = await User.findOne({ 
-      email, 
-      role: 'student'
-    });
-
-    // For security, always return same response
-    if (!user) {
-      return NextResponse.json({
-        message: 'If an account exists, reset instructions will be sent'
-      });
-    }
-
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto
-      .createHash('sha256')
-      .update(resetToken)
-      .digest('hex');
-
-    // Save token to user
-    user.resetPasswordToken = tokenHash;
-    user.resetPasswordExpire = Date.now() + 3600000; // 1 hour
-    await user.save();
-
-    // Send email
-    const emailResult = await sendPasswordResetEmail(email, resetToken, 'student');
-
-    if (!emailResult.success) {
-      console.error('Failed to send student reset email:', emailResult.error);
-      return NextResponse.json(
-        { message: 'Error sending reset email' },
-        { status: 500 }
+    if (!email) {
+      return new Response(
+        JSON.stringify({ message: "Email is required" }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    return NextResponse.json({
-      message: 'If an account exists, reset instructions will be sent'
-    });
+    // Find student
+    const student = await Student.findOne({ email: email.toLowerCase() });
+
+    // Generate reset token even if user doesn't exist (for security)
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    if (student) {
+      // Update student with reset token
+      student.resetPasswordToken = resetToken;
+      student.resetPasswordExpires = resetTokenExpiry;
+      await student.save();
+
+      // Send reset email
+      try {
+        const emailResult = await sendPasswordResetEmail({
+          email: student.email,
+          name: student.name,
+          token: resetToken,
+          role: 'student'
+        });
+
+        if (!emailResult.success) {
+          console.error('Failed to send student reset email:', emailResult.error);
+          throw new Error('Failed to send reset email');
+        }
+      } catch (emailError) {
+        console.error('Failed to send reset email:', emailError);
+        return new Response(
+          JSON.stringify({ message: "Failed to send reset email" }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Return same response whether user exists or not (for security)
+    return new Response(
+      JSON.stringify({ 
+        message: "If an account exists, password reset instructions will be sent to your email"
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+
   } catch (error) {
     console.error('Student password reset error:', error);
-    return NextResponse.json(
-      { message: 'Something went wrong' },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ message: "An error occurred while processing your request" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

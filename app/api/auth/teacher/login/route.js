@@ -10,39 +10,46 @@ export async function POST(request) {
     await connectDB();
     const { email, password } = await request.json();
 
-    const teacher = await Teacher.findOne({ email });
+    console.log('=== Teacher Login Attempt ===');
+    console.log('Email:', email);
+    console.log('Password length:', password.length);
+
+    const teacher = await Teacher.findOne({ email: email.toLowerCase() });
+    
     if (!teacher) {
       return new Response(
-        JSON.stringify({ message: 'Invalid credentials' }), 
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ message: "Invalid credentials" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log('Found teacher ID:', teacher._id);
+    console.log('Stored hash:', teacher.password);
+
+    // Test password match
     const isValid = await bcrypt.compare(password, teacher.password);
+    console.log('Password comparison result:', isValid);
+
+    // Double-check with a fresh hash
+    const testSalt = await bcrypt.genSalt(10);
+    const testHash = await bcrypt.hash(password, testSalt);
+    console.log('Test hash generated:', testHash);
+
     if (!isValid) {
       return new Response(
-        JSON.stringify({ message: 'Invalid credentials' }), 
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ message: "Invalid credentials" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     if (!teacher.verified) {
       return new Response(
-        JSON.stringify({ message: 'Please verify your email first' }), 
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ message: "Please verify your email first" }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create JWT token with necessary information
+    // Create token
     const token = jwt.sign(
       {
         userId: teacher._id,
@@ -53,30 +60,35 @@ export async function POST(request) {
       { expiresIn: '24h' }
     );
 
-    // Set HTTP-only cookie
+    // Set cookie
     const cookie=await cookies()
     cookie.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000
     });
 
-    return Response.json({
-      message: "Logged in successfully",
-      user: {
-        id: teacher._id,
-        email: teacher.email,
-        name: teacher.name,
-        role: 'teacher'
-      },
-    });
+    console.log('=== Login Successful ===');
+
+    return new Response(
+      JSON.stringify({
+        message: "Logged in successfully",
+        user: {
+          id: teacher._id,
+          name: teacher.name,
+          email: teacher.email,
+          role: 'teacher'
+        }
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Login error:', error);
-    return Response.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ message: "An error occurred during login" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

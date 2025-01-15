@@ -3,11 +3,13 @@ import Sidebar from './Sidebar';
 
 export default function TeacherDashboardLayout({ children }) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 ml-4 bg-background">
-        {children}
-      </main>
-    </div>
+    
+      
+    <div className="flex min-h-[calc(100vh-5rem)]">
+    <Sidebar />
+    <main className="flex-1 mx-20 bg-background">
+      {children}
+    </main>
+  </div>
   );
 }
