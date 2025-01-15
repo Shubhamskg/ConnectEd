@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { useToast } from '@/components/ui/use-toast';
 
 export function RequestCategoryDialog({ isOpen, onClose }) {
+  const {toast}=useToast()
   const router = useRouter();
   const [formData, setFormData] = useState({
     subject: '',
