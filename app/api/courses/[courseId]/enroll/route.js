@@ -5,6 +5,7 @@ import Student from "@/models/Student";
 import Enrollment from "@/models/Enrollment";
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import CourseEnrollment from "@/models/CourseEnrollment";
 
 async function verifyAuth() {
   const cookieStore = await cookies();
@@ -55,9 +56,9 @@ export async function POST(request, { params }) {
         { status: 404 }
       );
     }
-
+    const {courseId}=await params
     // Verify course
-    const course = await Course.findById(params.courseId);
+    const course = await Course.findById(courseId);
     if (!course) {
       return Response.json(
         { success: false, message: "Course not found"},
@@ -66,9 +67,9 @@ export async function POST(request, { params }) {
     }
 
     // Check if already enrolled
-    const existingEnrollment = await Enrollment.findOne({
-      student: student._id,
-      course: course._id
+    const existingEnrollment = await CourseEnrollment.findOne({
+      studentId: student._id,
+      courseId: course._id
     });
 
     if (existingEnrollment) {
@@ -79,9 +80,9 @@ export async function POST(request, { params }) {
     }
 
     // Create enrollment
-    const enrollment = new Enrollment({
-      student: student._id,
-      course: course._id
+    const enrollment = new CourseEnrollment({
+      studentId: student._id,
+      courseId: course._id
     });
 
     await enrollment.save();

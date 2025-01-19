@@ -1,4 +1,6 @@
-"use client";
+// app/dashboard/student/courses/page.jsx
+
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,17 +16,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
 import { 
   Search, 
   Book, 
   Clock, 
   Users,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Loader2
 } from "lucide-react";
 
 export default function StudentCoursesPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [levelFilter, setLevelFilter] = useState('all');
@@ -33,40 +38,71 @@ export default function StudentCoursesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const [enrolledRes, availableRes] = await Promise.all([
-          fetch('/api/student/courses/enrolled'),
-          fetch('/api/student/courses/available')
-        ]);
-
-        const [enrolledData, availableData] = await Promise.all([
-          enrolledRes.json(),
-          availableRes.json()
-        ]);
-
-        setEnrolledCourses(enrolledData.courses);
-        setAvailableCourses(availableData.courses);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCourses();
   }, []);
 
-   const categories = [
-    // 'Web Development',
-    // 'Mobile Development',
-    // 'Data Science',
-    // 'Machine Learning',
-    // 'DevOps',
-    // 'Cloud Computing',
-    // 'Cybersecurity',
-    // 'Blockchain',
-    // 'Game Development',
+  const fetchCourses = async () => {
+    try {
+      const [enrolledRes, availableRes] = await Promise.all([
+        fetch('/api/student/courses/enrolled'),
+        fetch('/api/student/courses/available')
+      ]);
+
+      if (!enrolledRes.ok || !availableRes.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+
+      const [enrolledData, availableData] = await Promise.all([
+        enrolledRes.json(),
+        availableRes.json()
+      ]);
+
+      setEnrolledCourses(enrolledData.courses);
+      setAvailableCourses(availableData.courses);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load courses",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const findFirstIncompleteLesson = (sections, progress) => {
+    for (const section of sections || []) {
+      for (const lesson of section.lessons || []) {
+        const lessonProgress = progress?.find(p => p.lessonId === lesson._id);
+        if (!lessonProgress || !lessonProgress.completed) {
+          return lesson._id;
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleContinueCourse = (course) => {
+    // Find first incomplete lesson or last accessed lesson
+    const firstIncompleteLesson = findFirstIncompleteLesson(course.sections, course.progress);
+    const lastAccessedLesson = course.progress?.sort((a, b) => 
+      new Date(b.lastAccessed) - new Date(a.lastAccessed)
+    )[0]?.lessonId;
+
+    const lessonId = firstIncompleteLesson || lastAccessedLesson || course.sections?.[0]?.lessons?.[0]?._id;
+
+    if (!lessonId) {
+      // If no lesson found, go to course overview
+      router.push(`/dashboard/student/courses/${course.id}`);
+      return;
+    }
+
+    // Navigate to specific lesson
+    router.push(`/dashboard/student/courses/${course.id}/learn/${lessonId}`);
+  };
+
+  const categories = [
     'Dentistry',
     'Medical',
     'Nursing',
@@ -94,7 +130,7 @@ export default function StudentCoursesPage() {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4" />
-              <span>{course.totalDuration} hours</span>
+              <span>{Math.ceil(course.totalDuration / 60)} hours</span>
             </div>
             <div className="flex items-center space-x-2">
               <BookOpen className="h-4 w-4" />
@@ -105,7 +141,7 @@ export default function StudentCoursesPage() {
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span>Progress</span>
-                <span>{course.progress}%</span>
+                <span>{Math.round(course.progress)}%</span>
               </div>
               <Progress value={course.progress} className="h-2" />
             </div>
@@ -116,7 +152,7 @@ export default function StudentCoursesPage() {
         {isEnrolled ? (
           <Button 
             className="w-full"
-            onClick={() => router.push(`/dashboard/student/courses/${course.id}/enrolled`)}
+            onClick={() => handleContinueCourse(course)}
           >
             Continue Learning
           </Button>
@@ -138,6 +174,14 @@ export default function StudentCoursesPage() {
     const matchesLevel = levelFilter === 'all' || course.level === levelFilter;
     return matchesSearch && matchesCategory && matchesLevel;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8">
@@ -167,9 +211,12 @@ export default function StudentCoursesPage() {
             <div className="text-center py-12">
               <Book className="h-12 w-12 mx-auto text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No Enrolled Courses</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 Start your learning journey by enrolling in a course
               </p>
+              <Button onClick={() => router.push('/courses')}>
+                Browse Courses
+              </Button>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -203,6 +250,7 @@ export default function StudentCoursesPage() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem 
                     key={category.toLowerCase()} 
@@ -221,7 +269,8 @@ export default function StudentCoursesPage() {
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
-                {levels.map((level) => (
+                <SelectItem value="all">All Levels</SelectItem>
+                {levels.slice(1).map((level) => (
                   <SelectItem 
                     key={level.toLowerCase()} 
                     value={level.toLowerCase()}

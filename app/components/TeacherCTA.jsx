@@ -43,7 +43,7 @@ export function TeacherCTA() {
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Get started without any upfront costs. We only take 15% when you make a sale.
+                  Get started without any upfront costs. We only take 25% when you make a sale.
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center">

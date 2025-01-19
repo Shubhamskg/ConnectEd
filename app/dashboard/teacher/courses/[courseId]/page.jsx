@@ -101,7 +101,7 @@ export default  function CourseDetails({ params }) {
         throw new Error('No data received');
       }
 
-      setCourse(data);
+      setCourse(data.course);
     } catch (error) {
       console.error('Error fetching course details:', error);
       toast({
@@ -188,7 +188,9 @@ export default  function CourseDetails({ params }) {
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
-
+  const handleLessonClick = (sectionId, lessonId) => {
+    router.push(`/learn/${course.id}/lessons/${lessonId}`);
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -240,7 +242,7 @@ export default  function CourseDetails({ params }) {
             <h1 className="text-2xl font-bold">{course.title}</h1>
             <div className="flex items-center space-x-2 mt-2">
               <Badge variant={getStatusBadgeVariant(course.status)}>
-                {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+              {(course.status ?? "unknown").charAt(0).toUpperCase() + (course.status ?? "unknown").slice(1)}
               </Badge>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Users className="h-4 w-4 mr-1" />
@@ -265,7 +267,7 @@ export default  function CourseDetails({ params }) {
               course.status === 'published' ? 'draft' : 'published'
             )}
             disabled={actionLoading}
-          >
+          >{console.log("pb",course)}
             {actionLoading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : course.status === 'published' ? (
@@ -301,133 +303,137 @@ export default  function CourseDetails({ params }) {
         </TabsList>
 
         <TabsContent value="content" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Content</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                {course.sections?.map((section, index) => (
-                  <AccordionItem key={index} value={`section-${index}`}>
-                    <AccordionTrigger>
-                      <div className="flex items-center justify-between w-full pr-4">
-                        <div className="flex items-center space-x-2">
-                          <span>{section.title}</span>
-                          <Badge variant="secondary">
-                            {section.lessons?.length || 0} lessons
-                          </Badge>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDuration(
-                            section.lessons?.reduce((acc, lesson) => acc + (lesson.duration || 0), 0) || 0
-                          )}
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-2">
-                        {section.lessons?.map((lesson, lessonIndex) => (
-                          <div 
-                            key={lessonIndex}
-                            className="flex items-center justify-between p-2 hover:bg-secondary/20 rounded-lg"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <Play className="h-4 w-4 text-muted-foreground" />
-                              <span>{lesson.title}</span>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {formatDuration(lesson.duration || 0)}
-                            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Course Content</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            {course.sections?.map((section, index) => (
+              <AccordionItem key={index} value={`section-${index}`}>
+                <AccordionTrigger>
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center space-x-2">
+                      <span>{section.title}</span>
+                      <Badge variant="secondary">
+                        {section.lessons?.length || 0} lessons
+                      </Badge>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDuration(
+                        section.lessons?.reduce((acc, lesson) => acc + (lesson.duration || 0), 0) || 0
+                      )}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2">
+                    {section.lessons?.map((lesson, lessonIndex) => (
+                      <button 
+                        key={lessonIndex}
+                        onClick={() => handleLessonClick(section.id, lesson.id)}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-center justify-between p-2 hover:bg-secondary/20 rounded-lg cursor-pointer">
+                          <div className="flex items-center space-x-2">
+                            <Play className="h-4 w-4 text-muted-foreground" />
+                            <span>{lesson.title}</span>
                           </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDuration(lesson.duration || 0)}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Course Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Description</h4>
-                    <p className="text-sm text-muted-foreground">{course.description}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Category</h4>
-                    <Badge variant="outline">{course.category}</Badge>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Level</h4>
-                    <Badge>{course.level}</Badge>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Prerequisites</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {course.prerequisites || 'None'}
-                    </p>
-                  </div>
-                  {course.objectives?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2">Learning Objectives</h4>
-                      <ul className="list-disc list-inside text-sm text-muted-foreground">
-                        {course.objectives.map((objective, index) => (
-                          <li key={index}>{objective}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Course Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Description</h4>
+                <p className="text-sm text-muted-foreground">{course.description}</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Category</h4>
+                <Badge variant="outline">{course.category}</Badge>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Level</h4>
+                <Badge>{course.level}</Badge>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Prerequisites</h4>
+                <p className="text-sm text-muted-foreground">
+                  {course.prerequisites || 'None'}
+                </p>
+              </div>
+              {course.objectives?.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Learning Objectives</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground">
+                    {course.objectives.map((objective, index) => (
+                      <li key={index}>{objective}</li>
+                    ))}
+                  </ul>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Total Students</p>
-                    <div className="flex items-center mt-1">
-                      <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-2xl font-bold">{course.enrollments}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Total Lessons</p>
-                    <div className="flex items-center mt-1">
-                      <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-2xl font-bold">{course.totalLessons}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Average Rating</p>
-                    <div className="flex items-center mt-1">
-                      <Star className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-2xl font-bold">
-                        {course.rating?.toFixed(1) || 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Discussions</p>
-                    <div className="flex items-center mt-1">
-                      <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-2xl font-bold">{course.discussionsCount || 0}</span>
-                    </div>
-                  </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Stats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium">Total Students</p>
+                <div className="flex items-center mt-1">
+                  <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-2xl font-bold">{course.enrollments}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Total Lessons</p>
+                <div className="flex items-center mt-1">
+                  <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-2xl font-bold">{course.totalLessons}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Average Rating</p>
+                <div className="flex items-center mt-1">
+                  <Star className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-2xl font-bold">
+                    {course.rating?.toFixed(1) || 'N/A'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Discussions</p>
+                <div className="flex items-center mt-1">
+                  <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-2xl font-bold">{course.discussionsCount || 0}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </TabsContent>
+
 
         <TabsContent value="students">
           {/* Student list and management component */}

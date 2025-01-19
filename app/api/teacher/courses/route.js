@@ -114,20 +114,31 @@ export async function POST(req) {
       );
     }
 
+    // Add order to sections and lessons
+    const processedSections = courseData.sections?.map((section, sectionIndex) => ({
+      ...section,
+      order: sectionIndex + 1, // Add section order
+      lessons: section.lessons?.map((lesson, lessonIndex) => ({
+        ...lesson,
+        order: lessonIndex + 1 // Add lesson order
+      })) || []
+    })) || [];
+
     // Calculate duration and lessons count
-    const totalDuration = courseData.sections?.reduce((total, section) => {
+    const totalDuration = processedSections.reduce((total, section) => {
       return total + (section.lessons?.reduce((sectionTotal, lesson) => {
         return sectionTotal + (parseInt(lesson.duration) || 0);
       }, 0) || 0);
-    }, 0) || 0;
+    }, 0);
 
-    const totalLessons = courseData.sections?.reduce((total, section) => {
+    const totalLessons = processedSections.reduce((total, section) => {
       return total + (section.lessons?.length || 0);
-    }, 0) || 0;
+    }, 0);
 
-    // Create new course document
+    // Create new course document with processed sections
     const course = new Course({
       ...courseData,
+      sections: processedSections, // Use processed sections with order
       teacherId: user.id,
       teacherName: user.name,
       status: 'draft',

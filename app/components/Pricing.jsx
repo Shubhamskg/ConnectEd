@@ -23,7 +23,7 @@ export function Pricing() {
             No Monthly Charges, No Hidden Fees
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Get started without any upfront costs. ConnectEd takes only 15% when you
+            Get started without any upfront costs. ConnectEd takes only 25% when you
             make a sale. Keep the lion's share of your earnings.
           </p>
         </div>
@@ -50,7 +50,7 @@ export function Pricing() {
                 <div className="text-4xl font-bold text-primary">FREE</div>
               </CardTitle>
               <p className="text-muted-foreground mt-2">
-                Only 15% fee on course sales
+                Only 25% fee on course sales
               </p>
             </CardHeader>
 

@@ -70,5 +70,9 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/api/dashboard/:path*',
+    '/api/upload/:path*',
   ]
 };
+
+
+

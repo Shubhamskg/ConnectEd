@@ -7,10 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Play, CheckCircle, ChevronRight } from "lucide-react";
+import { use } from 'react';
 
 export default function CourseLearnPage({ params }) {
   const router = useRouter();
-  const { courseId } = params;
+  const { courseId } =use(params);
   
   const [course, setCourse] = useState(null);
   const [enrollment, setEnrollment] = useState(null);

@@ -17,7 +17,7 @@ export function HowItWorks() {
     {
       number: 3,
       title: "Earn Your Certificate",
-      description: "Complete the course and receive your CPD-accredited certificate."
+      description: "Complete the course and receive your certificate."
     }
   ];
 

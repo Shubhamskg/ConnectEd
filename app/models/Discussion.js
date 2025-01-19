@@ -1,37 +1,38 @@
 // models/Discussion.js
+
 import mongoose from 'mongoose';
 
 const replySchema = new mongoose.Schema({
-  userId: {
+  authorId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    refPath: 'userModel'
+    refPath: 'authorType'
   },
-  userModel: {
+  authorType: {
     type: String,
     required: true,
     enum: ['Student', 'Teacher']
   },
   content: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
-  isInstructor: {
+  votes: {
+    type: Number,
+    default: 0
+  },
+  voters: [{
+    userId: mongoose.Schema.Types.ObjectId,
+    voteType: String // 'up' or 'down'
+  }],
+  isInstructorResponse: {
     type: Boolean,
     default: false
   },
-  isPinned: {
-    type: Boolean,
-    default: false
-  },
-  isResolved: {
-    type: Boolean,
-    default: false
-  },
-  likes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    refPath: 'userModel'
+  attachments: [{
+    type: String,
+    url: String,
+    name: String
   }]
 }, {
   timestamps: true
@@ -41,82 +42,84 @@ const discussionSchema = new mongoose.Schema({
   courseId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    required: true // Make courseId required
+    required: true
   },
   lessonId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course.sections.lessons'
+    ref: 'Lesson',
+    required: false // Optional, for lesson-specific discussions
+  },
+  authorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: 'authorType'
+  },
+  authorType: {
+    type: String,
+    required: true,
+    enum: ['Student', 'Teacher']
   },
   title: {
     type: String,
     required: true,
-    trim: true,
-    minLength: 5,
-    maxLength: 200
+    trim: true
   },
   content: {
     type: String,
-    required: true,
-    trim: true,
-    minLength: 20
-  },
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    refPath: 'authorModel'
-  },
-  authorModel: {
-    type: String,
-    required: true,
-    enum: ['Student', 'Teacher'],
-    default: 'Teacher'
-  },
-  studentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
-    required: false // Remove required constraint
+    required: true
   },
   type: {
     type: String,
     enum: ['question', 'discussion', 'announcement'],
     default: 'discussion'
   },
-  tags: [{
-    type: String,
-    trim: true
+  tags: [String],
+  votes: {
+    type: Number,
+    default: 0
+  },
+  voters: [{
+    userId: mongoose.Schema.Types.ObjectId,
+    voteType: String // 'up' or 'down'
   }],
-  status: {
-    type: String,
-    enum: ['open', 'resolved', 'closed'],
-    default: 'open'
-  },
-  isPinned: {
-    type: Boolean,
-    default: false
-  },
-  isAnnouncement: {
-    type: Boolean,
-    default: false
-  },
   views: {
     type: Number,
     default: 0
   },
-  likes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    refPath: 'userModel'
+  solved: {
+    type: Boolean,
+    default: false
+  },
+  pinned: {
+    type: Boolean,
+    default: false
+  },
+  attachments: [{
+    type: String,
+    url: String,
+    name: String
   }],
   replies: [replySchema],
   lastActivity: {
     type: Date,
     default: Date.now
+  },
+  status: {
+    type: String,
+    enum: ['active', 'archived', 'reported'],
+    default: 'active'
   }
 }, {
   timestamps: true
 });
 
+// Indexes for efficient querying
+discussionSchema.index({ courseId: 1, type: 1, status: 1 });
+discussionSchema.index({ courseId: 1, lessonId: 1, status: 1 });
+discussionSchema.index({ courseId: 1, authorId: 1 });
+discussionSchema.index({ title: 'text', content: 'text' });
 
-// Automatically update lastActivity on new replies
+// Update lastActivity on new replies
 discussionSchema.pre('save', function(next) {
   if (this.isModified('replies')) {
     this.lastActivity = new Date();
@@ -124,34 +127,41 @@ discussionSchema.pre('save', function(next) {
   next();
 });
 
-// Index for searching
-discussionSchema.index({
-  title: 'text',
-  content: 'text',
-  tags: 'text'
+// Virtual for reply count
+discussionSchema.virtual('replyCount').get(function() {
+  return this.replies?.length || 0;
 });
 
-// Compound indexes for efficient querying
-discussionSchema.index({ courseId: 1, status: 1 });
-discussionSchema.index({ courseId: 1, lastActivity: -1 });
+// Method to add a reply
+discussionSchema.methods.addReply = async function(reply) {
+  this.replies.push(reply);
+  this.lastActivity = new Date();
+  return this.save();
+};
 
-// Static method to get course discussion stats
-discussionSchema.statics.getCourseStats = async function(courseId) {
-  return this.aggregate([
-    { $match: { courseId: new mongoose.Types.ObjectId(courseId) } },
-    {
-      $group: {
-        _id: null,
-        totalDiscussions: { $sum: 1 },
-        resolvedDiscussions: { 
-          $sum: { $cond: [{ $eq: ['$status', 'resolved'] }, 1, 0] }
-        },
-        totalReplies: { $sum: { $size: '$replies' } },
-        totalViews: { $sum: '$views' }
-      }
+// Method to vote
+discussionSchema.methods.vote = async function(userId, voteType) {
+  const existingVote = this.voters.find(v => v.userId.equals(userId));
+  
+  if (existingVote) {
+    if (existingVote.voteType === voteType) {
+      // Remove vote
+      this.voters = this.voters.filter(v => !v.userId.equals(userId));
+      this.votes += voteType === 'up' ? -1 : 1;
+    } else {
+      // Change vote
+      existingVote.voteType = voteType;
+      this.votes += voteType === 'up' ? 2 : -2;
     }
-  ]);
+  } else {
+    // Add new vote
+    this.voters.push({ userId, voteType });
+    this.votes += voteType === 'up' ? 1 : -1;
+  }
+
+  return this.save();
 };
 
 const Discussion = mongoose.models.Discussion || mongoose.model('Discussion', discussionSchema);
+
 export default Discussion;

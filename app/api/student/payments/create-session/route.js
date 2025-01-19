@@ -54,7 +54,7 @@ const session = await stripe.checkout.sessions.create({
   line_items: [
     {
       price_data: {
-        currency: 'usd',
+        currency: 'gbp',
         product_data: {
           name: course.title,
           description: course.description?.substring(0, 255) || undefined,

@@ -60,7 +60,7 @@ const courseEnrollmentSchema = new mongoose.Schema({
     amount: Number,
     currency: {
       type: String,
-      default: 'USD'
+      default: 'GBP'
     },
     stripePaymentId: String,
     stripeSessionId: String,

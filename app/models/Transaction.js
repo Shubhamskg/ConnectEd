@@ -17,7 +17,7 @@ const Transaction = mongoose.models.Transaction || mongoose.model('Transaction',
   currency: {
     type: String,
     required: true,
-    default: 'USD'
+    default: 'GBP'
   },
   status: {
     type: String,

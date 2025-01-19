@@ -1,17 +1,18 @@
 // app/api/student/courses/verify-payment/route.js
-import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import Course from '@/models/Course';
-import CourseEnrollment from '@/models/CourseEnrollment';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
-import Student from '@/models/Student';
+
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import Course from "@/models/Course";
+import CourseEnrollment from "@/models/CourseEnrollment";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 import Stripe from 'stripe';
+import Student from "@/models/Student";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-async function verifyAuth() {
-  const cookieStore = await cookies();
+async function getUser(request) {
+  const cookieStore =await cookies();
   const token = cookieStore.get('auth-token');
 
   if (!token) {
@@ -20,44 +21,26 @@ async function verifyAuth() {
 
   try {
     const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
-    const student = await Student.findById(decoded.userId).select('-password');
-
-    if (!student) {
-      return null;
-    }
-
-    return {
-      id: student._id.toString(),
-      name: student.name,
-      email: student.email,
-      role: 'student'
-    };
+    return decoded;
   } catch (error) {
-    console.error('Auth verification error:', error);
+    console.error('Token verification error:', error);
     return null;
   }
 }
 
 export async function POST(request) {
   try {
-    const user = await verifyAuth();
+    const user = await getUser(request);
     
     if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
     const body = await request.json();
-    const { courseId, sessionId } = body;
-
-    if (!courseId || !sessionId) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    const { sessionId, courseId } = body;
 
     await connectDB();
 
@@ -71,7 +54,7 @@ export async function POST(request) {
       );
     }
 
-    // Check if metadata matches
+    // Verify the metadata matches
     if (session.metadata.courseId !== courseId || 
         session.metadata.studentId !== user.id) {
       return NextResponse.json(
@@ -91,30 +74,23 @@ export async function POST(request) {
 
     // Check if already enrolled
     let enrollment = await CourseEnrollment.findOne({
-      courseId,
-      studentId: user.id
+      studentId: user.id,
+      courseId: courseId
     });
 
     if (!enrollment) {
       // Create new enrollment
       enrollment = new CourseEnrollment({
         studentId: user.id,
-        courseId: course._id,
+        courseId: courseId,
         status: 'active',
-        lessonsProgress: course.sections.flatMap(section =>
-          section.lessons.map(lesson => ({
-            lessonId: lesson._id,
-            completed: false,
-            watchTime: 0
-          }))
-        ),
         paymentInfo: {
-          amount: session.amount_total / 100,
+          amount: session.amount_total / 100, // Convert from cents
           currency: session.currency,
-          stripePaymentId: session.payment_intent,
           stripeSessionId: session.id,
-          paymentStatus: 'completed',
-          paymentDate: new Date()
+          stripePaymentIntentId: session.payment_intent,
+          status: 'completed',
+          completedAt: new Date()
         }
       });
 
@@ -122,7 +98,7 @@ export async function POST(request) {
 
       // Update course enrollment count
       await Course.findByIdAndUpdate(courseId, {
-        $inc: { enrollments: 1 }
+        $inc: { enrolledStudents: 1 }
       });
     }
 
@@ -139,9 +115,9 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('Error verifying payment:', error);
+    console.error('Payment verification error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: 'Failed to verify payment' },
       { status: 500 }
     );
   }

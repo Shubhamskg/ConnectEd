@@ -424,7 +424,7 @@ export default function CourseUpload() {
                   name="price"
                   value={courseData.price}
                   onChange={handleChange}
-                  placeholder="Price"
+                  placeholder="Price per Student"
                   min="0"
                   required
                 />

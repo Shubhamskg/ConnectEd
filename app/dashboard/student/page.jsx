@@ -1,62 +1,279 @@
 // app/dashboard/student/page.jsx
-"use client";
+
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Loader2, Book, Calendar, TrendingUp, 
-  Clock, GraduationCap, Activity, Award,
-  Video, Users, MessageSquare
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Play,
+  Book,
+  Clock,
+  Medal,
+  Target,
+  Calendar,
+  TrendingUp,
+  Loader2,
+  ChevronRight,
+  PlayCircle,
+  CheckCircle,
+  
 } from "lucide-react";
+
+function LearningOverview({ stats }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-4">
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-2">
+            <Book className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium">Courses Enrolled</h3>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold">{stats?.totalCourses}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.activeCourses} active courses
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium">Learning Time</h3>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold">{Math.round(stats?.totalHours)}h</div>
+            <p className="text-xs text-muted-foreground">
+              Last 30 days
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-2">
+            <Medal className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium">Certificates</h3>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold">{stats?.completedCourses}</div>
+            <p className="text-xs text-muted-foreground">
+              Courses completed
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-2">
+            <Target className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium">Average Progress</h3>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold">{Math.round(stats?.averageProgress)}%</div>
+            <p className="text-xs text-muted-foreground">
+              Across all courses
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ActiveCourses({ courses, onContinue }) {
+  const router=useRouter()
+  if (!courses.length) {
+    return (
+      <div className="text-center py-12">
+        <Book className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="font-medium text-lg mb-2">No Active Courses</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Start learning by enrolling in a course
+        </p>
+        <Button onClick={() => router.push('/courses')}>
+          Browse Courses
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {courses.map((course) => (
+        <Card key={course.id} className="overflow-hidden">
+          <div className="aspect-video relative">
+            <img
+              src={course.thumbnail}
+              alt={course.title}
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+              <Button onClick={() => onContinue(course.id)}>
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Continue Learning
+              </Button>
+            </div>
+          </div>
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold line-clamp-1">{course.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {course.instructor}
+                  </p>
+                </div>
+                <Badge variant={course.progress === 100 ? "success" : "secondary"}>
+                  {course.progress}% Complete
+                </Badge>
+              </div>
+              <Progress value={course.progress} className="h-2" />
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>
+                  {course.completedLessons} / {course.totalLessons} lessons
+                </span>
+                <span>
+                  {Math.ceil(course.remainingTime / 60)} hours left
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function Certificates({ certificates }) {
+  if (!certificates.length) {
+    return (
+      <div className="text-center py-12">
+        {/* <Certificate className="h-12 w-12 mx-auto text-muted-foreground mb-4" /> */}
+        <h3 className="font-medium text-lg mb-2">No Certificates Yet</h3>
+        <p className="text-sm text-muted-foreground">
+          Complete a course to earn your first certificate
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {certificates.map((cert) => (
+        <Card key={cert.id} className="overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <Badge className="mb-2">Certificate</Badge>
+                <h3 className="font-semibold mb-1">{cert.courseTitle}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Completed on {new Date(cert.completedAt).toLocaleDateString()}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(cert.url, '_blank')}
+                >
+                  View Certificate
+                </Button>
+              </div>
+              <Medal className="h-12 w-12 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function LearningGoals({ goals, onUpdateGoal }) {
+  return (
+    <div className="space-y-4">
+      {goals.map((goal) => (
+        <Card key={goal.id}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className={`p-2 rounded-lg ${
+                  goal.completed ? 'bg-green-100' : 'bg-blue-100'
+                }`}>
+                  {goal.completed ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <Target className="h-5 w-5 text-blue-600" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-medium">{goal.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Due {new Date(goal.dueDate).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <Progress 
+                value={goal.progress} 
+                className="w-24 h-2"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    enrolledCourses: 0,
-    completedCourses: 0,
-    upcomingEvents: 0,
-    averageProgress: 0,
-    totalAssignments: 0,
-    completionRate: 0
-  });
+  const [stats, setStats] = useState(null);
+  const [activeCourses, setActiveCourses] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [goals, setGoals] = useState([]);
 
   useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const [profileRes, statsRes] = await Promise.all([
-          fetch('/api/student/profile'),
-          fetch('/api/student/stats')
-        ]);
+    fetchDashboardData();
+  }, []);
 
-        if (!profileRes.ok) {
-          if (profileRes.status === 401) {
-            router.push('/auth/student/login');
-            return;
-          }
-          throw new Error('Failed to fetch profile data');
-        }
+  const fetchDashboardData = async () => {
+    try {
+      const [statsRes, coursesRes, certificatesRes, goalsRes] = await Promise.all([
+        fetch('/api/student/stats'),
+        fetch('/api/student/courses/active'),
+        fetch('/api/student/certificates'),
+        fetch('/api/student/goals')
+      ]);
 
-        const [profileData, statsData] = await Promise.all([
-          profileRes.json(),
-          statsRes.json()
-        ]);
+      const [statsData, coursesData, certificatesData, goalsData] = await Promise.all([
+        statsRes.json(),
+        coursesRes.json(),
+        certificatesRes.json(),
+        goalsRes.json()
+      ]);
 
-        setStudent(profileData?.student);
-        setStats(statsData);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setStats(statsData);
+      setActiveCourses(coursesData.courses);
+      setCertificates(certificatesData.certificates);
+      setGoals(goalsData.goals);
 
-    fetchStudentData();
-  }, [router]);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinueLearning = (courseId) => {
+    router.push(`/learn/${courseId}`);
+  };
 
   if (loading) {
     return (
@@ -66,160 +283,62 @@ export default function StudentDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-red-500">Error: {error}</p>
-        <Button onClick={() => router.push('/auth/student/login')}>
-          Return to Login
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-8 p-8">
-      {/* Header Section */}
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Student Dashboard</h2>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, {student?.name}
+            Track your learning progress
           </p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => router.push('/dashboard/student/live')}>
-            <Video className="h-4 w-4 mr-2" />
-            Join Live Class
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => router.push('/dashboard/student/courses')}
-          >
-            <Book className="h-4 w-4 mr-2" />
-            Browse Courses
-          </Button>
-        </div>
+        <Button onClick={() => router.push('/courses')}>
+          Browse Courses
+          <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Enrolled Courses</CardTitle>
-            <Book className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.enrolledCourses}</div>
-            <p className="text-xs text-muted-foreground">
-              Active enrollments
-            </p>
-          </CardContent>
-        </Card>
+      <div className="space-y-8">
+        {/* Learning Overview */}
+        <LearningOverview stats={stats} />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Course Progress</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.averageProgress}%</div>
-            <p className="text-xs text-muted-foreground">
-              Average across all courses
-            </p>
-          </CardContent>
-        </Card>
+        {/* Main Content */}
+        <Tabs defaultValue="courses" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="courses">
+              <Book className="h-4 w-4 mr-2" />
+              Active Courses
+            </TabsTrigger>
+            <TabsTrigger value="certificates">
+              <Medal className="h-4 w-4 mr-2" />
+              Certificates
+            </TabsTrigger>
+            <TabsTrigger value="goals">
+              <Target className="h-4 w-4 mr-2" />
+              Learning Goals
+            </TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
-            <p className="text-xs text-muted-foreground">
-              Events in next 7 days
-            </p>
-          </CardContent>
-        </Card>
+          <TabsContent value="courses">
+            <ActiveCourses
+              courses={activeCourses}
+              onContinue={handleContinueLearning}
+            />
+          </TabsContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Assignments</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalAssignments}</div>
-            <p className="text-xs text-muted-foreground">
-              Due assignments
-            </p>
-          </CardContent>
-        </Card>
+          <TabsContent value="certificates">
+            <Certificates certificates={certificates} />
+          </TabsContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed Courses</CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completedCourses}</div>
-            <p className="text-xs text-muted-foreground">
-              Courses completed
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completionRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              Overall completion rate
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Button 
-          variant="outline" 
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/student/assignments')}
-        >
-          <Clock className="h-6 w-6" />
-          <span>View Assignments</span>
-        </Button>
-        
-        <Button 
-          variant="outline"
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/student/discussions')}
-        >
-          <MessageSquare className="h-6 w-6" />
-          <span>Join Discussions</span>
-        </Button>
-
-        <Button 
-          variant="outline"
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/student/events')}
-        >
-          <Calendar className="h-6 w-6" />
-          <span>Browse Events</span>
-        </Button>
-
-        <Button 
-          variant="outline"
-          className="h-24 flex flex-col items-center justify-center space-y-2"
-          onClick={() => router.push('/dashboard/student/progress')}
-        >
-          <Activity className="h-6 w-6" />
-          <span>Track Progress</span>
-        </Button>
+          <TabsContent value="goals">
+            <LearningGoals
+              goals={goals}
+              onUpdateGoal={(goalId, updates) => {
+                // Handle goal updates
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -13,12 +13,13 @@ import {
   ArrowRight,
   RotateCcw
 } from "lucide-react";
+import { use } from 'react';
 
 export default function PaymentStatusPage({ params }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { courseId } = params;
+  const { courseId } =use(params);
   
   const [loading, setLoading] = useState(true);
   const [verificationStatus, setVerificationStatus] = useState(null);

@@ -5,8 +5,8 @@ import Course from "@/models/Course";
 export async function GET(request, { params }) {
   try {
     await connectDB();
-    
-    const course = await Course.findById(params.courseId)
+    const {courseId}=await params
+    const course = await Course.findById(courseId)
       .populate('teacherId', 'teacherName')
       .lean();
 
@@ -19,7 +19,7 @@ export async function GET(request, { params }) {
 
     return Response.json({ course });
   } catch (error) {
-    console.error('Course fetch error:', error);
+    console.error('Course fetch error:', ercourseIdror);
     return Response.json(
       { message: "Failed to fetch course" },
       { status: 500 }

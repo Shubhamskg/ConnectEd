@@ -1,21 +1,15 @@
 // app/api/teacher/courses/[courseId]/route.js
-import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import mongoose from 'mongoose';
-import { deleteFromFirebase } from '@/lib/firebase';
-import Course from '@/models/Course';
-import Enrollment from '@/models/Enrollment';
-import Review from '@/models/Review';
-import Discussion from '@/models/Discussion';
-import Assignment from '@/models/Assignment';
-import { cookies } from 'next/headers';
+
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import Course from "@/models/Course";
+import { cookies } from "next/headers";
 import jwt from 'jsonwebtoken';
-import { use } from 'react';
 import Teacher from '@/models/Teacher';
 
 async function verifyAuth() {
-  const cookieStore =await cookies();
-  const token =  cookieStore.get('auth-token');
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth-token');
 
   if (!token) {
     return null;
@@ -41,82 +35,119 @@ async function verifyAuth() {
   }
 }
 
+// Add GET method to handle course retrieval
 export async function GET(request, { params }) {
   try {
-    // Get auth token
-    const cookieStore =await cookies();
-    const authToken = cookieStore.get('auth-token');
+    const user = await verifyAuth();
+    console.log("user",user)
     
-    if (!authToken || !authToken.value) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
-    // Verify token
-    const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
-    if (!decoded || !decoded.userId || decoded.role !== 'teacher') {
-      return NextResponse.json(
-        { error: 'Unauthorized access' },
-        { status: 401 }
-      );
-    }
-    
+
     const { courseId } =await params;
-    if (!mongoose.Types.ObjectId.isValid(courseId)) {
-      return NextResponse.json(
-        { error: 'Invalid course ID' },
-        { status: 400 }
-      );
-    }
-    
     await connectDB();
-    
-    const course = await Course.findOne({
-      _id: courseId,
-      teacherId: decoded.userId
-    }).lean();
-    
+
+    // Find course with populated teacher information
+    const course = await Course.findById(courseId)
+      .populate('teacherId', 'name avatar specialty bio')
+      .lean();
+
     if (!course) {
       return NextResponse.json(
         { error: 'Course not found' },
         { status: 404 }
       );
     }
+
+    // Format response
+    const formattedCourse = {
+      id: course._id,
+      title: course.title,
+      description: course.description,
+      thumbnail: course.thumbnail,
+      price: course.price,
+      discountedPrice: course.discountedPrice,
+      level: course.level,
+      category: course.category,
+      enrollments: course.enrolledStudents,
+      rating: course.rating,
+      totalDuration: course.totalDuration,
+      totalLessons: course.totalLessons,
+      language: course.language,
+      tags: course.tags || [],
+      prerequisites: course.requirements || [],
+      objectives: course.objectives || [],
+      status: course.status,
+      featured: course.featured,
+      completionCriteria: {
+        minWatchPercentage: course.completionCriteria?.minWatchPercentage,
+        requireQuizzes: course.completionCriteria?.requireQuizzes,
+        minQuizScore: course.completionCriteria?.minQuizScore
+      },
+      reviews: course.reviews || [],
+      lastUpdated: course.lastUpdated,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
+      slug: course.slug,
+      instructor: {
+        id: course.teacherId?._id,
+        name: course.teacherId?.name,
+        avatar: course.teacherId?.avatar,
+        specialty: course.teacherId?.specialty,
+        bio: course.teacherId?.bio
+      },
+      sections: course.sections.map(section => ({
+        id: section._id,
+        title: section.title,
+        description: section.description || "",
+        order: section.order,
+        lessons: section.lessons.map(lesson => ({
+          id: lesson._id,
+          title: lesson.title,
+          description: lesson.description,
+          duration: lesson.duration,
+          videoUrl: lesson.videoUrl,
+          resources: lesson.resources || [],
+          order: lesson.order
+        }))
+      }))
+    };
     
-    return NextResponse.json(course);
-    
+
+    return NextResponse.json({ course: formattedCourse });
+
   } catch (error) {
     console.error('Error fetching course:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Failed to fetch course' },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(req, { params }) {
-  try {
-     const user = await verifyAuth();
-                  if (!user) {
-                    return NextResponse.json(
-                      { error: 'Unauthorized' },
-                      { status: 401 }
-                    );
-                  }
 
-    const { courseId } =await params
-    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+
+export async function PATCH(request, { params }) {
+  try {
+    const user = await verifyAuth();
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'Invalid course ID' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
+    const { courseId } =await params;
+    const updates = await request.json();
+
     await connectDB();
 
-    // Find course and verify ownership
+    // Verify course ownership
     const course = await Course.findOne({
       _id: courseId,
       teacherId: user.id
@@ -129,38 +160,111 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    // Delete course resources from Firebase Storage
-    if (course.thumbnail) {
-      await deleteFromFirebase(course.thumbnail);
+    // Calculate total duration and lessons if content is being updated
+    if (updates.sections) {
+      let totalDuration = 0;
+      let totalLessons = 0;
+
+      updates.sections.forEach(section => {
+        totalLessons += section.lessons.length;
+        section.lessons.forEach(lesson => {
+          totalDuration += lesson.duration || 0;
+        });
+      });
+
+      updates.totalDuration = totalDuration;
+      updates.totalLessons = totalLessons;
     }
 
-    // Delete lesson videos
-    for (const section of course.sections || []) {
-      for (const lesson of section.lessons || []) {
-        if (lesson.videoURL) {
-          await deleteFromFirebase(lesson.videoURL);
+    // Handle status changes
+    if (updates.status && updates.status !== course.status) {
+      if (updates.status === 'published') {
+        // Validate course before publishing
+        const validationErrors = await validateCourseForPublishing(course);
+        if (validationErrors.length > 0) {
+          return NextResponse.json(
+            { error: 'Course validation failed', validationErrors },
+            { status: 400 }
+          );
         }
       }
+
+      // Record status change history
+      course.statusHistory = course.statusHistory || [];
+      course.statusHistory.push({
+        from: course.status,
+        to: updates.status,
+        changedAt: new Date(),
+        changedBy: user.id
+      });
     }
 
-    // Delete course and related data
-    await Promise.all([
-      Course.deleteOne({ _id: courseId }),
-      Enrollment.deleteMany({ courseId }),
-      Review.deleteMany({ courseId }),
-      Discussion.deleteMany({ courseId }),
-      Assignment.deleteMany({ courseId })
-    ]);
+    // Update course
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
+      { 
+        $set: updates,
+        lastUpdated: new Date()
+      },
+      { new: true }
+    );
 
     return NextResponse.json({
-      message: 'Course and related data deleted successfully'
+      message: 'Course updated successfully',
+      course: updatedCourse
     });
 
   } catch (error) {
-    console.error('Error deleting course:', error);
+    console.error('Error updating course:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Failed to update course' },
       { status: 500 }
     );
   }
+}
+
+async function validateCourseForPublishing(course) {
+  const errors = [];
+
+  // Basic validation
+  if (!course.title) errors.push('Course title is required');
+  if (!course.description) errors.push('Course description is required');
+  if (!course.thumbnail) errors.push('Course thumbnail is required');
+  if (!course.category) errors.push('Course category is required');
+  if (!course.level) errors.push('Course level is required');
+  
+  // Content validation
+  if (!course.sections?.length) {
+    errors.push('At least one section is required');
+  } else {
+    course.sections.forEach((section, sIndex) => {
+      if (!section.title) {
+        errors.push(`Section ${sIndex + 1} title is required`);
+      }
+      if (!section.lessons?.length) {
+        errors.push(`Section ${sIndex + 1} must have at least one lesson`);
+      } else {
+        section.lessons.forEach((lesson, lIndex) => {
+          if (!lesson.title) {
+            errors.push(`Lesson ${lIndex + 1} in Section ${sIndex + 1} title is required`);
+          }
+          if (!lesson.videoUrl) {
+            errors.push(`Lesson ${lIndex + 1} in Section ${sIndex + 1} video is required`);
+          }
+        });
+      }
+    });
+  }
+
+  // Learning objectives validation
+  if (!course.objectives?.length) {
+    errors.push('At least one learning objective is required');
+  }
+
+  // Requirements validation
+  if (!course.requirements?.length) {
+    errors.push('At least one course requirement is required');
+  }
+
+  return errors;
 }
