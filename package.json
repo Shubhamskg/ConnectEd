@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "@hookform/resolvers": "^3.9.1",
     "@kinde-oss/kinde-auth-nextjs": "^2.4.4",
@@ -48,6 +49,7 @@
     "mongoose": "^8.8.4",
     "next": "15.0.2",
     "next-auth": "^4.24.11",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.16",
     "pdfkit": "^0.16.0",
     "qrcode.react": "^4.1.0",
