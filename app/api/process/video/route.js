@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import File from '@/models/File';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import fetch from 'node-fetch';
@@ -11,10 +11,7 @@ import path from 'path';
 import os from 'os';
 
 // Initialize FFmpeg
-const ffmpeg = createFFmpeg({
-  log: true,
-  corePath: 'https://unpkg.com/@ffmpeg/core@0.12.2/dist/ffmpeg-core.js'
-});
+const ffmpeg = new FFmpeg({ log: true });
 
 // Ensure FFmpeg is loaded
 let ffmpegLoadPromise = null;
@@ -37,25 +34,25 @@ async function processVideo(inputPath, fileId) {
   try {
     // Load FFmpeg
     await loadFFmpeg();
-    
+
     // Read input file
     const inputData = await fs.promises.readFile(inputPath);
-    ffmpeg.FS('writeFile', 'input.mp4', inputData);
-    
+    await ffmpeg.writeFile('input.mp4', inputData);
+
     // Process video with multiple quality variants
     const qualities = [
       { name: '720p', height: 720, bitrate: '2500k' },
       { name: '480p', height: 480, bitrate: '1500k' },
       { name: '360p', height: 360, bitrate: '800k' }
     ];
-    
+
     const processedUrls = {};
-    
+
     for (const quality of qualities) {
       const outputFilename = `output_${quality.name}.mp4`;
-      
+
       // Process video
-      await ffmpeg.run(
+      await ffmpeg.exec([
         '-i', 'input.mp4',
         '-c:v', 'libx264',
         '-c:a', 'aac',
@@ -65,30 +62,24 @@ async function processVideo(inputPath, fileId) {
         '-movflags', '+faststart',
         '-y',
         outputFilename
-      );
-      
+      ]);
+
       // Read the processed file
-      const outputData = ffmpeg.FS('readFile', outputFilename);
-      
+      const outputData = await ffmpeg.readFile(outputFilename);
+
       // Upload to Firebase Storage
       const processedRef = ref(storage, `videos/processed/${fileId}/${quality.name}.mp4`);
       await uploadBytes(processedRef, outputData, {
         contentType: 'video/mp4'
       });
-      
+
       // Get download URL
       const url = await getDownloadURL(processedRef);
       processedUrls[quality.name] = url;
-      
-      // Clean up FFmpeg virtual filesystem
-      ffmpeg.FS('unlink', outputFilename);
     }
-    
-    // Clean up input file
-    ffmpeg.FS('unlink', 'input.mp4');
-    
+
     return processedUrls;
-    
+
   } catch (error) {
     console.error('Video processing error:', error);
     throw error;
@@ -113,40 +104,40 @@ ${processedUrls['360p']}`;
   await uploadBytes(playlistRef, Buffer.from(playlist), {
     contentType: 'application/vnd.apple.mpegurl'
   });
-  
+
   return await getDownloadURL(playlistRef);
 }
 
 export async function POST(request) {
   let inputPath = null;
-  
+
   try {
     const { fileId, originalUrl } = await request.json();
-    
+
     if (!fileId || !originalUrl) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
       );
     }
-    
+
     await connectDB();
-    
+
     // Update status to processing
     await File.findByIdAndUpdate(fileId, {
       processedStatus: 'processing',
       updatedAt: new Date()
     });
-    
+
     // Download original video
     inputPath = await downloadVideo(originalUrl);
-    
+
     // Process video and get processed URLs
     const processedUrls = await processVideo(inputPath, fileId);
-    
+
     // Generate HLS playlist
     const playlistUrl = await generateHLSPlaylist(processedUrls, fileId);
-    
+
     // Update document with processed URLs and playlist
     await File.findByIdAndUpdate(fileId, {
       processedStatus: 'completed',
@@ -154,17 +145,17 @@ export async function POST(request) {
       playlistUrl,
       updatedAt: new Date()
     });
-    
+
     return NextResponse.json({
       success: true,
       message: 'Processing completed',
       processedUrls,
       playlistUrl
     });
-    
+
   } catch (error) {
     console.error('Processing error:', error);
-    
+
     // Update status to failed
     if (fileId) {
       await File.findByIdAndUpdate(fileId, {
@@ -173,7 +164,7 @@ export async function POST(request) {
         updatedAt: new Date()
       });
     }
-    
+
     return NextResponse.json(
       { error: 'Processing failed' },
       { status: 500 }
