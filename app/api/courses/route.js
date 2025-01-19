@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
-import Teacher from "@/models/Teacher"; // Assuming you have a Teacher model for instructors
+import Teacher from "@/models/Teacher"; 
 
 export async function GET(request) {
   try {

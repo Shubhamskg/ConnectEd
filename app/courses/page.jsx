@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-export default function CourseCatalog() {
+const CourseCatalog = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -139,7 +139,6 @@ export default function CourseCatalog() {
       if (!response.ok) throw new Error(data.message);
 
       setCourses(data.courses);
-      console.log("course",data.courses)
       setTotalCourses(data.total);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -319,5 +318,13 @@ export default function CourseCatalog() {
         </div>
       )}
     </div>
+  );
+};
+
+export default function CourseCatalogPage() {
+  return (
+    <Suspense fallback={<SkeletonCard />}>
+      <CourseCatalog />
+    </Suspense>
   );
 }
