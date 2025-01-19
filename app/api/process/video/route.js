@@ -2,25 +2,16 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import File from '@/models/File';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import ffmpeg from 'fluent-ffmpeg';
 
-// Initialize FFmpeg
-const ffmpeg = new FFmpeg({ log: true });
-
-// Ensure FFmpeg is loaded
-let ffmpegLoadPromise = null;
-const loadFFmpeg = async () => {
-  if (!ffmpegLoadPromise) {
-    ffmpegLoadPromise = ffmpeg.load();
-  }
-  return ffmpegLoadPromise;
-};
+// Ensure FFmpeg is available
+ffmpeg.setFfmpegPath('/path/to/ffmpeg'); // Update this path as necessary
 
 async function downloadVideo(url) {
   const response = await fetch(url);
@@ -31,59 +22,46 @@ async function downloadVideo(url) {
 }
 
 async function processVideo(inputPath, fileId) {
-  try {
-    // Load FFmpeg
-    await loadFFmpeg();
+  const qualities = [
+    { name: '720p', height: 720, bitrate: '2500k' },
+    { name: '480p', height: 480, bitrate: '1500k' },
+    { name: '360p', height: 360, bitrate: '800k' }
+  ];
 
-    // Read input file
-    const inputData = await fs.promises.readFile(inputPath);
-    await ffmpeg.writeFile('input.mp4', inputData);
+  const processedUrls = {};
 
-    // Process video with multiple quality variants
-    const qualities = [
-      { name: '720p', height: 720, bitrate: '2500k' },
-      { name: '480p', height: 480, bitrate: '1500k' },
-      { name: '360p', height: 360, bitrate: '800k' }
-    ];
+  for (const quality of qualities) {
+    const outputFilename = path.join(os.tmpdir(), `output_${quality.name}.mp4`);
 
-    const processedUrls = {};
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .outputOptions([
+          '-c:v libx264',
+          '-c:a aac',
+          `-b:v ${quality.bitrate}`,
+          `-vf scale=-2:${quality.height}`,
+          '-preset medium',
+          '-movflags +faststart'
+        ])
+        .save(outputFilename)
+        .on('end', resolve)
+        .on('error', reject);
+    });
 
-    for (const quality of qualities) {
-      const outputFilename = `output_${quality.name}.mp4`;
+    const outputData = await fs.promises.readFile(outputFilename);
 
-      // Process video
-      await ffmpeg.exec([
-        '-i', 'input.mp4',
-        '-c:v', 'libx264',
-        '-c:a', 'aac',
-        '-b:v', quality.bitrate,
-        '-vf', `scale=-2:${quality.height}`,
-        '-preset', 'medium',
-        '-movflags', '+faststart',
-        '-y',
-        outputFilename
-      ]);
+    const processedRef = ref(storage, `videos/processed/${fileId}/${quality.name}.mp4`);
+    await uploadBytes(processedRef, outputData, {
+      contentType: 'video/mp4'
+    });
 
-      // Read the processed file
-      const outputData = await ffmpeg.readFile(outputFilename);
+    const url = await getDownloadURL(processedRef);
+    processedUrls[quality.name] = url;
 
-      // Upload to Firebase Storage
-      const processedRef = ref(storage, `videos/processed/${fileId}/${quality.name}.mp4`);
-      await uploadBytes(processedRef, outputData, {
-        contentType: 'video/mp4'
-      });
-
-      // Get download URL
-      const url = await getDownloadURL(processedRef);
-      processedUrls[quality.name] = url;
-    }
-
-    return processedUrls;
-
-  } catch (error) {
-    console.error('Video processing error:', error);
-    throw error;
+    await fs.promises.unlink(outputFilename);
   }
+
+  return processedUrls;
 }
 
 async function generateHLSPlaylist(processedUrls, fileId) {
@@ -99,7 +77,6 @@ ${processedUrls['480p']}
 #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
 ${processedUrls['360p']}`;
 
-  // Upload playlist to Firebase Storage
   const playlistRef = ref(storage, `videos/processed/${fileId}/playlist.m3u8`);
   await uploadBytes(playlistRef, Buffer.from(playlist), {
     contentType: 'application/vnd.apple.mpegurl'
@@ -123,22 +100,17 @@ export async function POST(request) {
 
     await connectDB();
 
-    // Update status to processing
     await File.findByIdAndUpdate(fileId, {
       processedStatus: 'processing',
       updatedAt: new Date()
     });
 
-    // Download original video
     inputPath = await downloadVideo(originalUrl);
 
-    // Process video and get processed URLs
     const processedUrls = await processVideo(inputPath, fileId);
 
-    // Generate HLS playlist
     const playlistUrl = await generateHLSPlaylist(processedUrls, fileId);
 
-    // Update document with processed URLs and playlist
     await File.findByIdAndUpdate(fileId, {
       processedStatus: 'completed',
       processedUrls,
@@ -156,7 +128,6 @@ export async function POST(request) {
   } catch (error) {
     console.error('Processing error:', error);
 
-    // Update status to failed
     if (fileId) {
       await File.findByIdAndUpdate(fileId, {
         processedStatus: 'failed',
@@ -170,7 +141,6 @@ export async function POST(request) {
       { status: 500 }
     );
   } finally {
-    // Clean up temporary files
     if (inputPath && fs.existsSync(inputPath)) {
       try {
         await fs.promises.unlink(inputPath);
