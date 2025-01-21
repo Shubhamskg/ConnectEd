@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/mongodb';
 import { LiveStream } from '@/models/LiveStream';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { Teacher } from '@/models/Teacher';
+import Teacher from '@/models/Teacher';
 
 async function verifyAuth() {
   const cookieStore = await cookies();
