@@ -2,10 +2,10 @@
 import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
 import Student from "@/models/Student";
-import Enrollment from "@/models/Enrollment";
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import CourseEnrollment from "@/models/CourseEnrollment";
+import { NextResponse } from "next/server";
 
 async function verifyAuth() {
   const cookieStore = await cookies();

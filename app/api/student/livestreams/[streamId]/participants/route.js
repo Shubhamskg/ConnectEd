@@ -6,7 +6,7 @@ import { LiveStream } from '@/models/LiveStream';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Student from '@/models/Student';
-import Enrollment from '@/models/Enrollment';
+import Enrollment from '@/models/CourseEnrollment';
 
 async function verifyAuth() {
   const cookieStore = await cookies();

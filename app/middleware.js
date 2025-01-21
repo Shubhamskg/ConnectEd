@@ -69,6 +69,8 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/courses/:path',
+    'learn/:path',
     '/api/dashboard/:path*',
     '/api/upload/:path*',
   ]

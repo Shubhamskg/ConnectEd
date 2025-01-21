@@ -1,14 +1,14 @@
 // app/api/teacher/stats/route.js
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import Enrollment from '@/models/Enrollment';
+import Enrollment from '@/models/CourseEnrollment';
 import Course from '@/models/Course';
 import Assignment from '@/models/Assignment';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';
 import Transaction from '@/models/Transaction';
-import LiveSession from '@/models/LiveSession';
+import {LiveStream} from '@/models/LiveStream';
 
 async function verifyAuth() {
   const cookieStore =await cookies();
@@ -75,7 +75,7 @@ export async function GET(req) {
         ,
       
       // Get upcoming live classes
-      LiveSession
+      LiveStream
         .find({
           teacherId,
           startTime: { $gte: new Date() },

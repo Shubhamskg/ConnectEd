@@ -91,8 +91,8 @@ async function calculateConsistencyScore(studentId) {
 export async function GET(request) {
   try {
     // Get auth token from cookie
-    const cookieList = cookies();
-    const authToken = cookieList.get('auth-token');
+    const cookieStore =await cookies();
+    const authToken = cookieStore.get('auth-token');
 
     if (!authToken) {
       return NextResponse.json(

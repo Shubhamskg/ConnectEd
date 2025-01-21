@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { unstable_cache } from 'next/cache';
 import { LiveStream } from '@/models/LiveStream';
 import Course from '@/models/Course';
-import Enrollment from '@/models/Enrollment';
+import Enrollment from '@/models/CourseEnrollment';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';

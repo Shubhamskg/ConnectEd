@@ -4,7 +4,7 @@ import { connectDB } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { LiveStream } from '@/models/LiveStream';
 import { use } from 'react';
-import Enrollment from '@/models/Enrollment';
+import Enrollment from '@/models/CourseEnrollment';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Teacher from '@/models/Teacher';

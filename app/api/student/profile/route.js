@@ -6,8 +6,8 @@ import jwt from 'jsonwebtoken';
 export async function GET(request) {
   try {
     // Get auth token from cookie
-    const cookieList = await cookies();
-    const authToken = cookieList.get('auth-token');
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get('auth-token');
 
     if (!authToken) {
       return new Response(
@@ -96,8 +96,8 @@ export async function GET(request) {
 export async function PUT(request) {
   try {
     // Get auth token from cookie
-    const cookieList = await cookies();
-    const authToken = cookieList.get('auth-token');
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get('auth-token');
 
     if (!authToken) {
       return new Response(

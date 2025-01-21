@@ -32,7 +32,7 @@ export async function GET() {
 
 // app/api/notifications/[id]/read/route.js
 export async function PUT(request, { params }) {
-  const { id } = params;
+  const { id } =await params;
   
   // In a real app, you would update the database
   // For now, we'll just return a success response

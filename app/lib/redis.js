@@ -4,6 +4,7 @@ import { Redis } from 'ioredis';
 // Configure Redis client
 const getRedisUrl = () => {
   if (process.env.REDIS_URL) {
+    console.log("url",process.env.REDIS_URL)
     return process.env.REDIS_URL;
   }
 

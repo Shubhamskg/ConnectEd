@@ -66,7 +66,7 @@ export default function TeacherDashboard() {
     if (type === 'live') {
       router.push('/dashboard/teacher/livestreams');
     } else {
-      router.push('/dashboard/teacher/courses/upload');
+      router.push('/dashboard/teacher/courses/create');
     }
   };
 
@@ -207,7 +207,7 @@ export default function TeacherDashboard() {
       <Button 
     variant="outline"
     className="h-24 flex flex-col items-center justify-center space-y-2"
-    onClick={() => router.push('/dashboard/teacher/courses/upload')}
+    onClick={() => router.push('/dashboard/teacher/courses/create')}
   >
     <Book className="h-6 w-6" />
     <span>Create Course</span>

@@ -1,117 +1,236 @@
 // app/api/student/courses/enrolled/route.js
-
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
 import CourseEnrollment from "@/models/CourseEnrollment";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { Types } from 'mongoose';
 
-async function getUser(request) {
-  const cookieStore = cookies();
-  const token = cookieStore.get('auth-token');
+// Helper function to calculate course statistics
+async function calculateCourseStats(enrollment, course) {
+  const completedLessons = enrollment.lessonsProgress.filter(p => p.completed).length;
+  const totalLessons = course.sections.reduce(
+    (total, section) => total + section.lessons.length, 
+    0
+  );
 
-  if (!token) {
-    return null;
+  // Calculate remaining time
+  const remainingTime = course.sections.reduce((total, section) => {
+    return total + section.lessons.reduce((sectionTotal, lesson) => {
+      const progress = enrollment.lessonsProgress.find(
+        p => p.lessonId.toString() === lesson._id.toString()
+      );
+      return progress?.completed ? sectionTotal : sectionTotal + (lesson.duration || 0);
+    }, 0);
+  }, 0);
+
+  return {
+    completedLessons,
+    totalLessons,
+    remainingTime,
+    completionRate: totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0
+  };
+}
+
+// Helper function to get study streak
+async function getStudyStreak(studentId) {
+  const objectId = Types.ObjectId.isValid(studentId) ? new Types.ObjectId(studentId) : null;
+  if (!objectId) {
+    throw new Error('Invalid student ID');
   }
 
-  try {
-    return jwt.verify(token.value, process.env.JWT_SECRET);
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return null;
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const dailyActivity = await CourseEnrollment.aggregate([
+    {
+      $match: {
+        studentId: objectId,
+        'lessonsProgress.lastWatched': { $gte: thirtyDaysAgo }
+      }
+    },
+    {
+      $unwind: '$lessonsProgress'
+    },
+    {
+      $match: {
+        'lessonsProgress.lastWatched': { $gte: thirtyDaysAgo }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: '$lessonsProgress.lastWatched'
+          }
+        },
+        totalTime: { $sum: '$lessonsProgress.watchTime' }
+      }
+    },
+    {
+      $sort: { '_id': -1 }
+    }
+  ]);
+
+  let currentStreak = 0;
+  let today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < dailyActivity.length; i++) {
+    const activityDate = new Date(dailyActivity[i]._id);
+    const expectedDate = new Date(today);
+    expectedDate.setDate(today.getDate() - i);
+
+    if (activityDate.getTime() === expectedDate.getTime()) {
+      currentStreak++;
+    } else {
+      break;
+    }
   }
+
+  return currentStreak;
 }
 
 export async function GET(request) {
   try {
-    const user = await getUser(request);
-    
-    if (!user) {
+    // Get auth token from cookie
+    const cookieStore =await cookies();
+    const authToken = cookieStore.get('auth-token');
+
+    if (!authToken) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { message: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
+    } catch (error) {
+      return NextResponse.json(
+        { message: "Invalid token" },
         { status: 401 }
       );
     }
 
     await connectDB();
 
-    // Get all enrollments with course details
-    const enrollments = await CourseEnrollment.find({ 
-      studentId: user.id 
-    })
-    .populate({
-      path: 'courseId',
-      populate: {
-        path: 'teacherId',
-        select: 'name'
-      }
-    })
-    .sort({ lastAccessedAt: -1 });
+    // Get search params if any
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const sort = searchParams.get('sort') || 'recent'; // default sort by recent activity
 
-    // Format the response with complete course information
-    const courses = enrollments.map(enrollment => {
+    // Prepare query
+    const query = {
+      studentId: decoded.userId
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    // Prepare sort options
+    const sortOptions = {
+      recent: { lastAccessedAt: -1 },
+      progress: { progress: -1 },
+      title: { 'course.title': 1 }
+    };
+
+    // Get enrollments with course and instructor details
+    const enrollments = await CourseEnrollment.find(query)
+      .populate({
+        path: 'courseId',
+        populate: {
+          path: 'teacherId',
+          select: 'name avatar'
+        }
+      })
+      .sort(sortOptions[sort])
+      .lean();
+
+    // Get current study streak
+    const studyStreak = await getStudyStreak(decoded.userId);
+
+    // Process and format course data
+    const coursesPromises = enrollments.map(async enrollment => {
       const course = enrollment.courseId;
-      
-      // Calculate completed lessons
-      const completedLessons = enrollment.lessonsProgress.filter(p => p.completed).length;
-      
-      // Calculate total lessons
-      const totalLessons = course.sections.reduce((total, section) => 
-        total + section.lessons.length, 0);
-      
-      // Calculate remaining time
-      const remainingTime = course.sections.reduce((total, section) => {
-        return total + section.lessons.reduce((sectionTotal, lesson) => {
-          const progress = enrollment.lessonsProgress.find(
-            p => p.lessonId.toString() === lesson._id.toString()
-          );
-          if (!progress?.completed) {
-            return sectionTotal + (lesson.duration || 0);
-          }
-          return sectionTotal;
-        }, 0);
-      }, 0);
+      const stats = await calculateCourseStats(enrollment, course);
 
       return {
-        id: course._id,
+        id: course._id.toString(),
+        enrollmentId: enrollment._id.toString(),
         title: course.title,
         description: course.description,
         thumbnail: course.thumbnail,
-        instructorName: course.teacherId.name,
+        instructor: {
+          id: course.teacherId._id.toString(),
+          name: course.teacherId.name,
+          avatar: course.teacherId.avatar
+        },
         progress: Math.round(enrollment.progress),
-        completedLessons,
-        totalLessons,
-        remainingTime,
+        status: enrollment.status,
+        stats: {
+          completedLessons: stats.completedLessons,
+          totalLessons: stats.totalLessons,
+          remainingTime: stats.remainingTime,
+          completionRate: Math.round(stats.completionRate)
+        },
         lastAccessed: enrollment.lastAccessedAt,
+        enrolledAt: enrollment.enrolledAt,
+        completedAt: enrollment.completedAt,
+        expiresAt: enrollment.expiresAt,
+        certificate: enrollment.certificate,
         sections: course.sections.map(section => ({
-          _id: section._id,
+          id: section._id.toString(),
           title: section.title,
+          order: section.order,
           lessons: section.lessons.map(lesson => ({
-            _id: lesson._id,
+            id: lesson._id.toString(),
             title: lesson.title,
             duration: lesson.duration,
-            completed: enrollment.lessonsProgress.some(
-              p => p.lessonId.toString() === lesson._id.toString() && p.completed
-            )
+            type: lesson.type,
+            progress: {
+              completed: enrollment.lessonsProgress.some(
+                p => p.lessonId.toString() === lesson._id.toString() && p.completed
+              ),
+              watchTime: enrollment.lessonsProgress.find(
+                p => p.lessonId.toString() === lesson._id.toString()
+              )?.watchTime || 0,
+              lastWatched: enrollment.lessonsProgress.find(
+                p => p.lessonId.toString() === lesson._id.toString()
+              )?.lastWatched
+            }
           }))
-        })),
-        // Include progress details for each lesson
-        progress: enrollment.lessonsProgress.map(progress => ({
-          lessonId: progress.lessonId,
-          completed: progress.completed,
-          watchTime: progress.watchTime,
-          lastAccessed: progress.lastWatched
         }))
       };
     });
 
-    return NextResponse.json({ courses });
+    const courses = await Promise.all(coursesPromises);
+
+    // Calculate overall stats
+    const overallStats = {
+      totalCourses: courses.length,
+      activeCourses: courses.filter(c => c.status === 'active').length,
+      completedCourses: courses.filter(c => c.status === 'completed').length,
+      averageProgress: Math.round(
+        courses.reduce((sum, course) => sum + course.progress, 0) / courses.length
+      ),
+      studyStreak
+    };
+
+    return NextResponse.json({
+      courses,
+      stats: overallStats
+    });
 
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch enrolled courses' },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }

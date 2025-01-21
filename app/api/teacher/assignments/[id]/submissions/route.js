@@ -44,9 +44,9 @@ export async function GET(req, { params }) {
           }
 
     await connectDB();
-    
+    const {id}=await params
     const assignment = await Assignment.findOne({
-      _id: params.id,
+      _id: id,
       teacher: user.id
     })
     .populate('submissions.student', 'name email')
