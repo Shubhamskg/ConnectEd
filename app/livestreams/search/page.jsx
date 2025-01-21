@@ -1,7 +1,6 @@
-//app/livestreams/search/page.jsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAuth } from '@/components/auth/useAuth';
@@ -15,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Pagination,
   PaginationContent,
@@ -37,6 +35,22 @@ import {
 } from 'lucide-react';
 
 export default function StreamSearchPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <StreamSearchContent />
+    </Suspense>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
+
+function StreamSearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
@@ -124,11 +138,7 @@ export default function StreamSearchPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   return (
@@ -195,9 +205,7 @@ export default function StreamSearchPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
+          <LoadingFallback />
         ) : streams.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center h-96">
@@ -271,7 +279,7 @@ export default function StreamSearchPage() {
         {pagination && pagination.pages > 1 && (
           <Pagination>
             <PaginationContent>
-            <PaginationPrev 
+              <PaginationPrev 
                 onClick={() => setPage(page - 1)}
                 disabled={page <= 1}
               />
