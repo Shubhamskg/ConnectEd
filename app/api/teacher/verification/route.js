@@ -1,7 +1,7 @@
 // app/api/teacher/verification/route.js
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import Teacher from '@/lib/models/Teacher';
+import Teacher from '@/models/Teacher';
 import { getAuthToken } from '@/lib/auth';
 
 
