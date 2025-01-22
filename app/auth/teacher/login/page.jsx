@@ -1,7 +1,6 @@
-// app/auth/teacher/login/page.jsx
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -140,10 +139,9 @@ function SuccessMessage({ message, email }) {
   );
 }
 
-function LoginForm() {
+function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastUsedEmail, setLastUsedEmail] = useState("");
@@ -151,10 +149,6 @@ function LoginForm() {
     email: "",
     password: ""
   });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -182,14 +176,6 @@ function LoginForm() {
       setLoading(false);
     }
   };
-
-  if (!mounted) {
-    return (
-      <div className="min-h-[300px] flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -258,6 +244,20 @@ function LoginForm() {
         </div>
       </form>
     </div>
+  );
+}
+
+function LoginForm() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-[300px] flex items-center justify-center">
+          <div className="animate-pulse text-gray-400">Loading...</div>
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }
 
