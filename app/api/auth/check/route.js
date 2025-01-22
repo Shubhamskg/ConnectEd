@@ -24,11 +24,11 @@ export async function GET(request) {
       let user;
       if (decoded.role === 'teacher') {
         user = await Teacher.findById(decoded.userId)
-          .select('-password')
+          .select('-password -resetPasswordToken -resetPasswordExpires -verificationToken -verificationTokenExpires')
           .lean();
       } else if (decoded.role === 'student') {
         user = await Student.findById(decoded.userId)
-          .select('-password')
+          .select('-password -resetPasswordToken -resetPasswordExpires -verificationToken -verificationTokenExpires')
           .lean();
       } else {
         return NextResponse.json(
@@ -44,14 +44,39 @@ export async function GET(request) {
         );
       }
 
-      return NextResponse.json({
-        user: {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          role: decoded.role
+      // Transform the user object based on role
+      const userResponse = {
+        id: user._id.toString(),
+        firstName: user.firstName,
+        middleName: user.middleName,
+        lastName: user.lastName,
+        email: user.email,
+        username: user.username,
+        preferredContactNumber: user.preferredContactNumber,
+        verified: user.verified,
+        role: decoded.role,
+        profile: {
+          avatar: user.profile?.avatar || null,
+          bio: user.profile?.bio || null,
+          location: user.profile?.location || null,
+          website: user.profile?.website || null,
+          education: user.profile?.education || [],
+          skills: user.profile?.skills || [],
+          socialLinks: user.profile?.socialLinks || {
+            linkedin: null,
+            github: null,
+            twitter: null
+          }
         }
-      });
+      };
+
+      // Add role-specific fields
+      if (decoded.role === 'student') {
+        userResponse.subjectsOfInterest = user.subjectsOfInterest || [];
+      }
+
+      return NextResponse.json({ user: userResponse });
+
     } catch (err) {
       console.error('Token verification error:', err);
       return NextResponse.json(

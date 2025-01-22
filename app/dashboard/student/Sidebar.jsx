@@ -13,6 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  FileText,
+  MessageSquare,
+  Clock
 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,7 +28,7 @@ const Sidebar = () => {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        const response = await fetch('/api/student/profile', {
+        const response = await fetch('/api/auth/check', {
           credentials: 'include'
         });
 
@@ -34,11 +37,14 @@ const Sidebar = () => {
         }
 
         const data = await response.json();
-        setStudent({
-          name: data.name,
-          email: data.email,
-          initials: getInitials(data.name)
-        });
+        if (data.user && data.user.role === 'student') {
+          setStudent({
+            name: getFullName(data.user),
+            email: data.user.email,
+            avatar: data.user.profile?.avatar,
+            initials: getInitials(data.user)
+          });
+        }
       } catch (error) {
         console.error('Error fetching student data:', error);
       } finally {
@@ -49,14 +55,20 @@ const Sidebar = () => {
     fetchStudentData();
   }, []);
 
-  const getInitials = (name) => {
-    if (!name) return '';
-    return name
-      .split(' ')
-      .map(part => part?.[0] || '')
+  const getFullName = (user) => {
+    if (!user) return '';
+    return [user.firstName, user.middleName, user.lastName]
+      .filter(Boolean)
+      .join(' ');
+  };
+
+  const getInitials = (user) => {
+    if (!user) return '';
+    return [user.firstName, user.lastName]
+      .filter(Boolean)
+      .map(name => name?.[0] || '')
       .join('')
-      .toUpperCase()
-      .slice(0, 2);
+      .toUpperCase();
   };
 
   const menuItems = [
@@ -67,12 +79,17 @@ const Sidebar = () => {
     },
     {
       icon: BookOpen,
-      label: 'My Courses',
+      label: 'My Learning',
       href: '/dashboard/student/courses'
     },
+    // {
+    //   icon: FileText,
+    //   label: 'Assignments',
+    //   href: '/dashboard/student/assignments'
+    // },
     {
       icon: Calendar,
-      label: 'Event',
+      label: 'Events',
       href: '/dashboard/student/events'
     },
     {
@@ -81,15 +98,15 @@ const Sidebar = () => {
       href: '/dashboard/student/livestreams'
     },
     // {
-    //   icon: User2,
-    //   label: 'Profile',
-    //   href: '/dashboard/student/profile'
+    //   icon: MessageSquare,
+    //   label: 'Discussions',
+    //   href: '/dashboard/student/discussions'
     // },
     // {
-    //   icon: Settings,
-    //   label: 'Settings',
-    //   href: '/dashboard/student/settings'
-    // },
+    //   icon: Clock,
+    //   label: 'Schedule',
+    //   href: '/dashboard/student/schedule'
+    // }
   ];
 
   return (
@@ -155,9 +172,17 @@ const Sidebar = () => {
           ) : (
             <>
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {student?.initials || ''}
-                </span>
+                {student?.avatar ? (
+                  <img 
+                    src={student.avatar} 
+                    alt={student.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-white">
+                    {student?.initials || ''}
+                  </span>
+                )}
               </div>
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">

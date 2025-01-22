@@ -87,10 +87,11 @@ const StudentSchema = new mongoose.Schema({
     }],
     skills: [String],
     socialLinks: {
-      linkedin: String,
-      github: String,
-      twitter: String
+      linkedin: { type: String, default: "" },
+      github: { type: String, default: "" },
+      twitter: { type: String, default: "" }
     }
+    
   }
 }, {
   timestamps: true

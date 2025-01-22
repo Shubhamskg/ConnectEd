@@ -94,19 +94,36 @@ export function Navbar() {
   const getNavItems = () => {
     if (user?.role === 'teacher') {
       return [
-        { label: "Dashboard", icon: Layout, href: "/dashboard/teacher" },
+        // { label: "Dashboard", icon: Layout, href: "/dashboard/teacher" },
         { label: "My Courses", icon: BookOpen, href: "/dashboard/teacher/courses" },
-        { label: "Students", icon: GraduationCap, href: "/dashboard/teacher/students" },
-        { label: "Live Classes", icon: MessageSquare, href: "/dashboard/teacher/live-stream" },
-        { label: "Earnings", icon: BarChart, href: "/dashboard/teacher/earnings" },
+        // { label: "Students", icon: GraduationCap, href: "/dashboard/teacher/students" },
+        // { label: "Live Classes", icon: MessageSquare, href: "/dashboard/teacher/live-stream" },
+        // { label: "Earnings", icon: BarChart, href: "/dashboard/teacher/earnings" },
       ];
     }
     return [
       { label: "My Learning", icon: BookOpen, href: "/dashboard/student" },
-      { label: "Assignments", icon: FileText, href: "/dashboard/student/assignments" },
-      { label: "Discussions", icon: MessageSquare, href: "/dashboard/student/discussions" },
-      { label: "Schedule", icon: Clock, href: "/dashboard/student/schedule" },
+      // { label: "Assignments", icon: FileText, href: "/dashboard/student/assignments" },
+      // { label: "Discussions", icon: MessageSquare, href: "/dashboard/student/discussions" },
+      // { label: "Schedule", icon: Clock, href: "/dashboard/student/schedule" },
     ];
+  };
+
+  // Function to get user's full name
+  const getUserFullName = () => {
+    if (!user) return '';
+    const { firstName, middleName, lastName } = user;
+    return [firstName, middleName, lastName].filter(Boolean).join(' ');
+  };
+
+  // Function to get user's initials
+  const getUserInitials = () => {
+    if (!user) return '';
+    return [user.firstName, user.lastName]
+      .filter(Boolean)
+      .map(name => name[0])
+      .join('')
+      .toUpperCase();
   };
 
   return (
@@ -115,10 +132,9 @@ export function Navbar() {
         isScrolled ? "shadow-sm" : ""
       }`}
     >
-      
       <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
-      {/* Logo */}
-        <Link href={user?`/dashboard/${user.role}`:"/"} className="flex items-center space-x-0">
+        {/* Logo */}
+        <Link href={user ? `/dashboard/${user.role}` : "/"} className="flex items-center space-x-0">
           <img 
             src="/logo2.png" 
             alt="ConnectEd Logo" 
@@ -214,9 +230,13 @@ export function Navbar() {
                     className="flex items-center space-x-2 hover:bg-gray-100/80"
                   >
                     <Avatar className="h-8 w-8 ring-2 ring-offset-2 ring-blue-500">
-                      <AvatarFallback className="bg-blue-500 text-white">
-                        {user?.name?.[0]?.toUpperCase()}
-                      </AvatarFallback>
+                      {user.profile?.avatar ? (
+                        <AvatarImage src={user.profile.avatar} alt={getUserFullName()} />
+                      ) : (
+                        <AvatarFallback className="bg-blue-500 text-white">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <ChevronDown className="h-4 w-4 text-gray-600" />
                   </Button>
@@ -224,8 +244,8 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel className="p-4">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
+                      <p className="text-sm font-medium">{getUserFullName()}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -238,12 +258,12 @@ export function Navbar() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="py-2">
+                  {/* <DropdownMenuItem className="py-2">
                     <Link href="/settings" className="flex items-center w-full">
                       <Settings className="h-4 w-4 mr-3 text-gray-500" />
                       Settings
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem 
                     className="text-red-600 py-2" 
                     onClick={handleLogout}
@@ -290,13 +310,17 @@ export function Navbar() {
                   <div className="space-y-6">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-blue-500">
-                        <AvatarFallback className="bg-blue-500 text-white">
-                          {user?.name?.[0]?.toUpperCase()}
-                        </AvatarFallback>
+                        {user.profile?.avatar ? (
+                          <AvatarImage src={user.profile.avatar} alt={getUserFullName()} />
+                        ) : (
+                          <AvatarFallback className="bg-blue-500 text-white">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        )}
                       </Avatar>
                       <div>
-                        <p className="font-medium">{user?.name}</p>
-                        <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
+                        <p className="font-medium">{getUserFullName()}</p>
+                        <p className="text-sm text-gray-500 capitalize">{user.role}</p>
                       </div>
                     </div>
                     <div className="space-y-1">

@@ -1,3 +1,5 @@
+
+// File: app/api/student/profile/route.js
 import { connectDB } from "@/lib/mongodb";
 import Student from "@/models/Student";
 import { cookies } from 'next/headers';
@@ -5,211 +7,112 @@ import jwt from 'jsonwebtoken';
 
 export async function GET(request) {
   try {
-    // Get auth token from cookie
     const cookieStore = await cookies();
     const authToken = cookieStore.get('auth-token');
 
     if (!authToken) {
       return new Response(
         JSON.stringify({ message: "Not authenticated" }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { status: 401 }
       );
     }
 
-    // Verify JWT token
-    let decoded;
-    try {
-      decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ message: "Invalid token" }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
+    const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
     await connectDB();
 
-    // Find student by ID with selected fields
     const student = await Student.findById(decoded.userId)
-      .select('name email verified createdAt updatedAt profile')
+      .select('-password')
       .lean();
 
     if (!student) {
       return new Response(
         JSON.stringify({ message: "Student not found" }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { status: 404 }
       );
     }
 
-    // Transform the data for frontend
-    const transformedStudent = {
-      id: student._id.toString(),
-      name: student.name,
-      email: student.email,
-      verified: student.verified,
-      createdAt: student.createdAt,
-      updatedAt: student.updatedAt,
-      profile: {
-        avatar: student.profile?.avatar || null,
-        bio: student.profile?.bio || '',
-        location: student.profile?.location || '',
-        website: student.profile?.website || '',
-        education: student.profile?.education || [],
-        skills: student.profile?.skills || [],
-        socialLinks: {
-          linkedin: student.profile?.socialLinks?.linkedin || '',
-          github: student.profile?.socialLinks?.github || '',
-          twitter: student.profile?.socialLinks?.twitter || ''
-        }
-      }
-    };
-
     return new Response(
-      JSON.stringify(transformedStudent),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({
+        ...student,
+        id: student._id.toString()
+      }),
+      { status: 200 }
     );
 
   } catch (error) {
     console.error('Profile fetch error:', error);
     return new Response(
       JSON.stringify({ message: "Internal server error" }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      { status: 500 }
     );
   }
 }
 
 export async function PUT(request) {
   try {
-    // Get auth token from cookie
     const cookieStore = await cookies();
     const authToken = cookieStore.get('auth-token');
 
     if (!authToken) {
       return new Response(
         JSON.stringify({ message: "Not authenticated" }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { status: 401 }
       );
     }
 
-    // Verify JWT token
-    let decoded;
-    try {
-      decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ message: "Invalid token" }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
+    const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
     await connectDB();
 
-    // Parse request body
     const updatedData = await request.json();
-
-    // Validate required fields
-    if (!updatedData.name) {
-      return new Response(
-        JSON.stringify({ message: "Name is required" }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Update student profile
     const student = await Student.findById(decoded.userId);
-
+    console.log("udapteddata",updatedData)
     if (!student) {
       return new Response(
         JSON.stringify({ message: "Student not found" }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { status: 404 }
       );
     }
 
-    // Update basic fields
-    student.name = updatedData.name;
-
-    // Update profile fields if provided
+    // Update fields
     if (updatedData.profile) {
+      if (updatedData.profile.socialLinks) {
+        const cleanedSocialLinks = Object.fromEntries(
+          Object.entries(updatedData.profile.socialLinks).filter(([_, value]) => value)
+        );
+        updatedData.profile.socialLinks = cleanedSocialLinks;
+      }
+      
       student.profile = {
-        ...student.profile || {},
-        ...updatedData.profile,
-        // Ensure nested objects are properly merged
-        socialLinks: {
-          ...(student.profile?.socialLinks || {}),
-          ...(updatedData.profile.socialLinks || {})
-        }
+        ...student.profile.toObject(), // Ensure nested object merging
+        ...updatedData.profile
       };
+      student.markModified('profile.socialLinks');
     }
 
-    // Save the updated student
+    ['firstName', 'middleName', 'lastName', 'preferredContactNumber', 'subjectsOfInterest'].forEach(field => {
+      if (updatedData[field] !== undefined) {
+        student[field] = updatedData[field];
+      }
+    });
+
     await student.save();
 
-    // Transform the data for response
-    const transformedStudent = {
-      id: student._id.toString(),
-      name: student.name,
-      email: student.email,
-      verified: student.verified,
-      createdAt: student.createdAt,
-      updatedAt: student.updatedAt,
-      profile: {
-        avatar: student.profile?.avatar || null,
-        bio: student.profile?.bio || '',
-        location: student.profile?.location || '',
-        website: student.profile?.website || '',
-        education: student.profile?.education || [],
-        skills: student.profile?.skills || [],
-        socialLinks: {
-          linkedin: student.profile?.socialLinks?.linkedin || '',
-          github: student.profile?.socialLinks?.github || '',
-          twitter: student.profile?.socialLinks?.twitter || ''
-        }
-      }
-    };
-
     return new Response(
-      JSON.stringify(transformedStudent),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({
+        ...student.toObject(),
+        id: student._id.toString()
+      }),
+      { status: 200 }
     );
 
   } catch (error) {
-    console.error('Profile update error:', error);
+    console.error('Error during profile update:', error);
     return new Response(
-      JSON.stringify({ message: "Internal server error" }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({ message: error.message || "Internal server error" }),
+      { status: 500 }
     );
   }
 }
+
+
+
