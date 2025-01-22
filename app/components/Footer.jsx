@@ -17,26 +17,26 @@ export function Footer() {
     platform: [
       { name: 'About Us', href: '/about' },
       { name: 'How It Works', href: '/how-it-works' },
-      { name: 'Testimonials', href: '/testimonials' },
+      // { name: 'Testimonials', href: '/testimonials' },
       { name: 'Contact Us', href: '/contact' },
     ],
     teach: [
-      { name: 'Become a Teacher', href: '/teach' },
+      { name: 'Become a Teacher', href: '/auth/teacher/signup' },
       { name: 'Teacher Guidelines', href: '/guidelines' },
       { name: 'CPD Accreditation', href: '/accreditation' },
-      { name: 'Success Stories', href: '/success-stories' },
+      // { name: 'Success Stories', href: '/success-stories' },
     ],
     learn: [
       { name: 'All Courses', href: '/courses' },
-      { name: 'Live Classes', href: '/live-classes' },
-      { name: 'Student Support', href: '/support' },
-      { name: 'Request a Course', href: '/request-course' },
+      { name: 'All Events', href: '/events' },
+      // { name: 'Student Support', href: '/support' },
+      { name: 'Request a Course', href: '/request-category' },
     ],
     resources: [
       { name: 'Help Center', href: '/help' },
       { name: 'Terms of Service', href: '/terms' },
       { name: 'Privacy Policy', href: '/privacy-policy' },
-      { name: 'CPD Information', href: '/cpd-info' },
+      // { name: 'CPD Information', href: '/cpd-info' },
     ],
   };
 

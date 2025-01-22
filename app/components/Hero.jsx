@@ -1,5 +1,6 @@
-"use client"
-import React from "react";
+"use client";
+import React, { useState } from "react"; // Import React and useState hook for state management
+import { useRouter } from 'next/navigation'; // Updated import for 'useRouter' to be compatible with Next.js 13+ (app directory)
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,24 @@ import {
 } from "lucide-react";
 
 export function Hero() {
+  const [searchTerm, setSearchTerm] = useState(''); // Manage the search input state
+  const router = useRouter(); // Access Next.js router
   const stats = [
     // { label: "Active Learners", value: "500+" },
     // { label: "Expert Teachers", value: "50+" },
     // { label: "Online Courses", value: "100+" },
     // { label: "Success Rate", value: "95%" },
   ];
+  
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value); // Update state with the input value
+  };
+
+  const handleSearchClick = () => {
+    if (searchTerm.trim()) { // Only proceed if search term is not empty
+      router.push(`/courses?topic=${encodeURIComponent(searchTerm)}`);
+    }
+  };
 
   const popularTopics = [
     "Dentistry ",
@@ -97,9 +110,15 @@ export function Hero() {
                 <Input
                   placeholder="What do you want to teach or learn?"
                   className="pl-12 h-14 text-lg bg-white border-2 border-blue-100 focus:border-blue-400 rounded-xl shadow-sm"
+                  value={searchTerm} // Bind the input value to state
+                  onChange={handleInputChange} // Handle input changes
                 />
               </div>
-              <Button size="lg" className="h-14 px-8 text-lg bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md">
+              <Button
+                onClick={handleSearchClick} // Trigger search on button click
+                size="lg"
+                className="h-14 px-8 text-lg bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md"
+              >
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>

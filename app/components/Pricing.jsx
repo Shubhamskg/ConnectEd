@@ -1,9 +1,12 @@
 // components/Pricing.jsx
+'use client';
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function Pricing() {
+  const router = useRouter();
   const features = [
     "Community spaces",
     "Course creation tools",
@@ -70,7 +73,7 @@ export function Pricing() {
                 </div>
               </div>
 
-              <Button className="w-full mt-8" size="lg">
+              <Button  onClick={() => router.push('/auth/teacher/signup')} className="w-full mt-8" size="lg">
                 Start Teaching Today
               </Button>
               

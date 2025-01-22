@@ -1,6 +1,9 @@
 // components/CTASection.jsx
+'use client';
+import { useRouter } from 'next/navigation';
 import { Button } from "./ui/button";
 export function CTASection() {
+  const router = useRouter();
     return (
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4">
@@ -12,10 +15,10 @@ export function CTASection() {
               Join thousands of dental professionals improving their skills with ConnectEd
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="secondary" size="lg">
+              <Button onClick={() => router.push('/courses')} variant="secondary" size="lg">
                 Browse Courses
               </Button>
-              <Button variant="outline" size="lg" className="bg-white/10">
+              <Button onClick={() => router.push('/auth/teacher/login')} variant="outline" size="lg" className="bg-white/10">
                 Become a Teacher
               </Button>
             </div>

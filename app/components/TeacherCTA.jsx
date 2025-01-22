@@ -1,10 +1,15 @@
 // components/TeacherCTA.jsx
+'use client';
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 
 export function TeacherCTA() {
+  const router = useRouter();
+
   const benefits = [
     "Create and sell your own courses",
     "Host live training sessions",
@@ -30,7 +35,7 @@ export function TeacherCTA() {
               ))}
             </ul>
             <Link href="/teach">
-              <Button variant="secondary" size="lg" className="mt-8">
+              <Button onClick={() => router.push('/auth/teacher/signup')} variant="secondary" size="lg" className="mt-8">
                 Start Teaching
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
