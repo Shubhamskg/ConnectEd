@@ -1,7 +1,6 @@
-// app/auth/teacher/reset-password/page.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,17 @@ function ResetPasswordForm({ token }) {
       special: new RegExp(`[${SPECIAL_CHARS}]`).test(password)
     };
     return Object.values(checks).every(Boolean);
+  };
+
+  const getPasswordStrength = (password) => {
+    if (!password) return 0;
+    let score = 0;
+    if (password.length >= 10) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if ((password.match(/\d/g) || []).length >= 2) score++;
+    if (new RegExp(`[${SPECIAL_CHARS}]`).test(password)) score++;
+    return (score / 5) * 100;
   };
 
   const handleSubmit = async (e) => {
@@ -69,17 +79,6 @@ function ResetPasswordForm({ token }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getPasswordStrength = (password) => {
-    if (!password) return 0;
-    let score = 0;
-    if (password.length >= 10) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[a-z]/.test(password)) score++;
-    if ((password.match(/\d/g) || []).length >= 2) score++;
-    if (new RegExp(`[${SPECIAL_CHARS}]`).test(password)) score++;
-    return (score / 5) * 100;
   };
 
   return (
@@ -143,7 +142,7 @@ function ResetPasswordForm({ token }) {
   );
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -157,18 +156,45 @@ export default function ResetPasswordPage() {
   if (!token) return null;
 
   return (
+    <Card className="w-full max-w-lg">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl text-center">Reset Teacher Password</CardTitle>
+        <CardDescription className="text-center">
+          Enter your new password
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ResetPasswordForm token={token} />
+      </CardContent>
+    </Card>
+  );
+}
+
+// Loading fallback component
+function LoadingCard() {
+  return (
+    <Card className="w-full max-w-lg">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl text-center">Loading...</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4 animate-pulse">
+          <div className="h-10 bg-gray-200 rounded"></div>
+          <div className="h-24 bg-gray-200 rounded"></div>
+          <div className="h-10 bg-gray-200 rounded"></div>
+          <div className="h-10 bg-gray-200 rounded"></div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
     <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Reset Teacher Password</CardTitle>
-          <CardDescription className="text-center">
-            Enter your new password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResetPasswordForm token={token} />
-        </CardContent>
-      </Card>
+      <Suspense fallback={<LoadingCard />}>
+        <ResetPasswordContent />
+      </Suspense>
     </div>
   );
 }
