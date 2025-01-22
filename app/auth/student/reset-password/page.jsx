@@ -1,6 +1,8 @@
+
+// app/auth/student/reset-password/page.jsx
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-// Separate component for the form content
 function ResetPasswordForm({ token }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -18,12 +19,29 @@ function ResetPasswordForm({ token }) {
     confirmPassword: ''
   });
 
+  const SPECIAL_CHARS = '!@#$%^&*(),.?{}';
+
+  const validatePassword = (password) => {
+    const checks = {
+      length: password.length >= 10,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      special: new RegExp(`[${SPECIAL_CHARS}]`).test(password)
+    };
+    return Object.values(checks).every(Boolean);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      setError('Password must be at least 10 characters long and contain two numbers, one uppercase letter, one lowercase letter, and one special character');
       return;
     }
 
@@ -60,6 +78,7 @@ function ResetPasswordForm({ token }) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
       <div className="space-y-2">
         <Label htmlFor="password">New Password</Label>
         <Input
@@ -69,7 +88,18 @@ function ResetPasswordForm({ token }) {
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
         />
+        <div className="text-sm text-gray-500 space-y-1">
+          Password must contain:
+          <ul className="list-disc list-inside">
+            <li>At least 10 characters</li>
+            <li>Two numbers</li>
+            <li>One uppercase letter</li>
+            <li>One lowercase letter</li>
+            <li>One special character ({SPECIAL_CHARS})</li>
+          </ul>
+        </div>
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirm New Password</Label>
         <Input
@@ -80,6 +110,7 @@ function ResetPasswordForm({ token }) {
           onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
         />
       </div>
+
       <Button
         type="submit"
         className="w-full"
@@ -91,33 +122,9 @@ function ResetPasswordForm({ token }) {
   );
 }
 
-// Main component with Suspense boundary
-export default function StudentResetPassword() {
+export default function ResetPasswordPage() {
   const router = useRouter();
-  
-  return (
-    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
-          <CardDescription className="text-center">
-            Enter your new password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<div>Loading...</div>}>
-            <ResetPasswordContent />
-          </Suspense>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// Component that uses useSearchParams
-function ResetPasswordContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get('token');
 
   useEffect(() => {
@@ -128,5 +135,19 @@ function ResetPasswordContent() {
 
   if (!token) return null;
 
-  return <ResetPasswordForm token={token} />;
+  return (
+    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
+          <CardDescription className="text-center">
+            Enter your new password
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResetPasswordForm token={token} />
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

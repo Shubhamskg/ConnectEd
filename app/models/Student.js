@@ -3,10 +3,26 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const StudentSchema = new mongoose.Schema({
-  name: {
+  firstName: {
     type: String,
-    required: [true, 'Name is required'],
+    required: [true, 'First name is required'],
     trim: true
+  },
+  middleName: {
+    type: String,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true
+  },
+  username: {
+    type: String,
+    required: [true, 'Username is required'],
+    unique: true,
+    trim: true,
+    minlength: [4, 'Username must be at least 4 characters']
   },
   email: {
     type: String,
@@ -24,7 +40,29 @@ const StudentSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters']
+    minlength: [10, 'Password must be at least 10 characters'],
+    validate: {
+      validator: function(v) {
+        // Two numbers, one uppercase, one lowercase, one special character
+        return /^(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*(),.?{}]).{10,}$/.test(v);
+      },
+      message: 'Password must have 10+ characters, 2 numbers, 1 uppercase, 1 lowercase, and 1 special character'
+    }
+  },
+  preferredContactNumber: {
+    type: String,
+    required: [true, 'Contact number is required'],
+    trim: true
+  },
+  subjectsOfInterest: {
+    type: [String],
+    required: [true, 'Please select at least one subject'],
+    validate: {
+      validator: function(v) {
+        return v.length > 0 && v.length <= 3;
+      },
+      message: 'Please select between 1 and 3 subjects'
+    }
   },
   verified: {
     type: Boolean,
@@ -57,6 +95,7 @@ const StudentSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
 // Hash password before saving
 StudentSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
@@ -80,12 +119,9 @@ StudentSchema.methods.isResetTokenValid = function(token) {
   return this.resetPasswordToken === token && 
          this.resetPasswordExpires > Date.now();
 };
+
 // Ensure this model hasn't been compiled before
 mongoose.models = {};
 
 const Student = mongoose.model('Student', StudentSchema);
 export default Student;
-
-
-
-

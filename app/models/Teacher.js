@@ -3,13 +3,74 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const TeacherSchema = new mongoose.Schema({
-  name: {
+  firstName: {
     type: String,
-    required: [true, 'Name is required'],
+    required: [true, 'First name is required'],
     trim: true
   },
+  middleName: {
+    type: String,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    validate: {
+      validator: function(v) {
+        return /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid email!`
+    }
+  },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: [10, 'Password must be at least 10 characters'],
+    validate: {
+      validator: function(v) {
+        return /^(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*(),.?{}]).{10,}$/.test(v);
+      },
+      message: 'Password must have 10+ characters, 2 numbers, 1 uppercase, 1 lowercase, and 1 special character'
+    }
+  },
+  phoneNumber: {
+    type: String,
+    required: [true, 'Phone number is required'],
+    trim: true
+  },
+  department: {
+    type: String,
+    trim: true
+  },
+  qualification: {
+    type: String,
+    required: [true, 'Qualification is required'],
+    trim: true
+  },
+  experience: {
+    type: String,
+    required: [true, 'Teaching experience is required'],
+    trim: true
+  },
+  subjectsToTeach: {
+    type: [String],
+    required: [true, 'Please select at least one subject to teach'],
+    validate: {
+      validator: function(v) {
+        return v.length > 0 && v.length <= 3;
+      },
+      message: 'Please select between 1 and 3 subjects to teach'
+    }
+  },
   bio: String,
-  expertise: [String],
   courses: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course'
@@ -27,7 +88,6 @@ const TeacherSchema = new mongoose.Schema({
     }
   }],
   profileImage: String,
-  updatedAt: { type: Date, default: Date.now },
   stats: {
     totalStudents: {
       type: Number,
@@ -42,37 +102,6 @@ const TeacherSchema = new mongoose.Schema({
       default: 0
     }
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    trim: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters']
-  },
-  department: {
-    type: String,
-    trim: true,
-    default: null
-  },
-  phone: {
-    type: String,
-    trim: true,
-    default: null
-  },
-  location: {
-    type: String,
-    trim: true,
-    default: null
-  },
   verified: {
     type: Boolean,
     default: false
@@ -85,10 +114,6 @@ const TeacherSchema = new mongoose.Schema({
   timestamps: true
 });
 
-TeacherSchema.methods.isResetTokenValid = function(token) {
-  return this.resetPasswordToken === token && 
-         this.resetPasswordExpires > Date.now();
-};
 // Hash password before saving
 TeacherSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
@@ -103,7 +128,17 @@ TeacherSchema.pre('save', async function(next) {
   }
 });
 
-// Remove password and sensitive fields when converting to JSON
+// Method to compare passwords
+TeacherSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+TeacherSchema.methods.isResetTokenValid = function(token) {
+  return this.resetPasswordToken === token && 
+         this.resetPasswordExpires > Date.now();
+};
+
+// Remove sensitive fields when converting to JSON
 TeacherSchema.set('toJSON', {
   transform: function(doc, ret, options) {
     delete ret.password;
@@ -115,6 +150,7 @@ TeacherSchema.set('toJSON', {
     return ret;
   }
 });
+
 mongoose.models = {};
 
 const Teacher = mongoose.model('Teacher', TeacherSchema);

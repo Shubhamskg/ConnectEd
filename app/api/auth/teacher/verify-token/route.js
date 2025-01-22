@@ -1,3 +1,4 @@
+
 // app/api/auth/teacher/verify-token/route.js
 import { connectDB } from "@/lib/mongodb";
 import Teacher from "@/models/Teacher";
@@ -15,7 +16,7 @@ export async function GET(request) {
     }
 
     await connectDB();
-    
+
     const teacher = await Teacher.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() }
@@ -33,7 +34,7 @@ export async function GET(request) {
     teacher.verificationTokenExpires = undefined;
     await teacher.save();
 
-    return Response.json({ 
+    return Response.json({
       message: "Email verified successfully",
       redirectUrl: "/auth/teacher/login?success=" + encodeURIComponent("Email verified successfully. You can now log in.")
     });

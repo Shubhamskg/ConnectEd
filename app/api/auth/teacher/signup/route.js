@@ -4,24 +4,63 @@ import Teacher from "@/models/Teacher";
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email';
 
+const SPECIAL_CHARS = '!@#$%^&*(),.?{}';
+
 export async function POST(request) {
   try {
     await connectDB();
-    const { name, email, password } = await request.json();
+    const { 
+      firstName, 
+      middleName, 
+      lastName, 
+      email, 
+      password, 
+      phoneNumber,
+      department,
+      subjectsToTeach,
+      qualification,
+      experience
+    } = await request.json();
 
     // Input validation
-    if (!name || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !phoneNumber || 
+        !qualification || !experience || !subjectsToTeach) {
       return Response.json(
-        { message: "All fields are required" },
+        { message: "All required fields must be filled" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password requirements
+    const passwordValidation = {
+      length: password.length >= 10,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      special: new RegExp(`[${SPECIAL_CHARS}]`).test(password)
+    };
+
+    if (!Object.values(passwordValidation).every(Boolean)) {
+      return Response.json(
+        { 
+          message: "Password must be at least 10 characters long and atleast one uppercase letter, one lowercase letter, and one special character" 
+        },
         { status: 400 }
       );
     }
 
     // Check if email already exists
-    const existingTeacher = await Teacher.findOne({ email });
+    const existingTeacher = await Teacher.findOne({ email: email.toLowerCase() });
     if (existingTeacher) {
       return Response.json(
         { message: "Email already registered" },
+        { status: 400 }
+      );
+    }
+
+    // Validate subjects
+    if (!Array.isArray(subjectsToTeach) || subjectsToTeach.length === 0 || subjectsToTeach.length > 3) {
+      return Response.json(
+        { message: "Please select between 1 and 3 subjects to teach" },
         { status: 400 }
       );
     }
@@ -32,9 +71,16 @@ export async function POST(request) {
 
     // Create new teacher
     const teacher = new Teacher({
-      name,
-      email,
+      firstName: firstName.trim(),
+      middleName: middleName?.trim(),
+      lastName: lastName.trim(),
+      email: email.toLowerCase().trim(),
       password,
+      phoneNumber: phoneNumber.trim(),
+      department: department?.trim(),
+      subjectsToTeach,
+      qualification: qualification.trim(),
+      experience: experience.trim(),
       verificationToken,
       verificationTokenExpires,
       verified: false
@@ -44,19 +90,18 @@ export async function POST(request) {
 
     // Send verification email
     await sendVerificationEmail({
-      email,
+      email: teacher.email,
       token: verificationToken,
-      name,
+      name: `${teacher.firstName} ${teacher.lastName}`,
       role: 'teacher'
     });
 
     return Response.json({
       message: "Registration successful! Please check your email to verify your account."
     });
-
   } catch (error) {
     console.error('Signup error:', error);
-    
+
     if (error.message === 'Failed to send verification email') {
       return Response.json(
         { message: "Account created but failed to send verification email. Please contact support." },

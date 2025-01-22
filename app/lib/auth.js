@@ -99,10 +99,12 @@ export const authOptions = {
 // Helper function to get auth token from cookies
 export async function getAuthToken() {
   try {
-    const token = await cookies().get('auth-token');
+    const cookie=await cookies()
+    const token = cookie.get('auth-token');
     if (!token) return null;
     
     const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
+
     return decoded;
   } catch (error) {
     console.error('Auth token error:', error);
@@ -181,7 +183,7 @@ export function generateToken(userId, role) {
       role 
     },
     process.env.JWT_SECRET,
-    { expiresIn: '24h' }
+    // { expiresIn: '24h' }
   );
 }
 

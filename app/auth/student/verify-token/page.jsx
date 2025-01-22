@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -12,8 +13,11 @@ function VerificationContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('verifying');
   const [error, setError] = useState('');
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [redirectCountdown, setRedirectCountdown] = useState(3);
   const token = searchParams.get('token');
 
+  // Handle verification
   useEffect(() => {
     const verifyToken = async () => {
       try {
@@ -22,8 +26,6 @@ function VerificationContent() {
           setStatus('error');
           return;
         }
-
-        console.log('Verifying token:', token); // Debug log
 
         const response = await fetch(
           `/api/auth/student/verify-token?token=${encodeURIComponent(token)}`,
@@ -42,9 +44,7 @@ function VerificationContent() {
         }
 
         setStatus('success');
-        setTimeout(() => {
-          router.push('/auth/student/login?success=' + encodeURIComponent(data.message));
-        }, 3000);
+        setRedirectUrl(data.redirectUrl);
       } catch (err) {
         console.error('Verification error:', err);
         setError(err.message);
@@ -53,31 +53,66 @@ function VerificationContent() {
     };
 
     verifyToken();
-  }, [token, router]);
+  }, [token]);
 
-  const handleResendVerification = () => {
-    router.push('/auth/student/login'); // Redirect to login where they can request new verification
-  };
+  // Handle countdown and redirect
+  useEffect(() => {
+    let countdownInterval;
+    
+    if (status === 'success' && redirectUrl) {
+      countdownInterval = setInterval(() => {
+        setRedirectCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            router.push(redirectUrl);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
+  }, [status, redirectUrl, router]);
 
   return (
     <Card className="w-full max-w-lg">
-      <CardHeader>
+      <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-center">Email Verification</CardTitle>
+        <CardDescription className="text-center">
+          {status === 'verifying' && 'We are verifying your email address'}
+          {status === 'success' && 'Your email has been verified'}
+          {status === 'error' && 'Verification failed'}
+        </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-4">
         {status === 'verifying' && (
           <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <p>Verifying your email address...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <p className="text-gray-600">Please wait while we verify your email address...</p>
           </div>
         )}
 
         {status === 'success' && (
-          <Alert className="bg-green-50 text-green-700">
-            <AlertDescription>
-              Email verified successfully! Redirecting to login page...
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-4">
+            <Alert className="bg-green-50 border-green-200">
+              <AlertDescription className="text-green-700">
+                Email verified successfully! You will be redirected to the login page in {redirectCountdown} seconds...
+              </AlertDescription>
+            </Alert>
+            <div className="flex justify-center">
+              <Link href="/auth/student/login">
+                <Button variant="link" className="text-blue-600">
+                  Click here to login now
+                </Button>
+              </Link>
+            </div>
+          </div>
         )}
 
         {status === 'error' && (
@@ -87,12 +122,21 @@ function VerificationContent() {
                 {error || 'Failed to verify email. The verification link may be invalid or expired.'}
               </AlertDescription>
             </Alert>
-            <div className="flex justify-center space-x-4">
-              <Button
-                onClick={handleResendVerification}
-              >
-                Back to Login
-              </Button>
+            <div className="space-y-2">
+              <div className="flex justify-center">
+                <Link href="/auth/student/login">
+                  <Button className="w-full">
+                    Back to Login
+                  </Button>
+                </Link>
+              </div>
+              <div className="text-center text-sm text-gray-600">
+                If you need a new verification link,{' '}
+                <Link href="/auth/student/login" className="text-blue-600 hover:underline">
+                  log in
+                </Link>
+                {' '}and request one from your account.
+              </div>
             </div>
           </div>
         )}
@@ -110,7 +154,7 @@ export default function VerifyTokenPage() {
             <CardTitle className="text-2xl text-center">Loading...</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </CardContent>
         </Card>
       }>

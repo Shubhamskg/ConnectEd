@@ -1,3 +1,4 @@
+
 // app/api/auth/student/resend-verification/route.js
 import { connectDB } from "@/lib/mongodb";
 import Student from "@/models/Student";
@@ -8,12 +9,17 @@ export async function POST(request) {
   try {
     const { email } = await request.json();
 
-    await connectDB();
+    if (!email) {
+      return Response.json(
+        { message: "Email is required" },
+        { status: 400 }
+      );
+    }
 
-    const student = await Student.findOne({ email });
+    await connectDB();
+    const student = await Student.findOne({ email: email.toLowerCase() });
 
     if (!student) {
-      // Return success even if email doesn't exist for security
       return Response.json({
         message: "If an account exists, a verification email will be sent."
       });
@@ -26,7 +32,6 @@ export async function POST(request) {
       );
     }
 
-    // Generate new verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -35,8 +40,8 @@ export async function POST(request) {
     await student.save();
 
     await sendVerificationEmail({
-      email,
-      name: student.name,
+      email: student.email,
+      name: `${student.firstName} ${student.lastName}`,
       token: verificationToken,
       role: 'student'
     });
@@ -44,7 +49,6 @@ export async function POST(request) {
     return Response.json({
       message: "If an account exists, a verification email will be sent."
     });
-
   } catch (error) {
     console.error('Resend verification error:', error);
     return Response.json(

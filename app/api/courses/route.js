@@ -2,6 +2,8 @@ import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
 import Teacher from "@/models/Teacher"; 
 
+
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);

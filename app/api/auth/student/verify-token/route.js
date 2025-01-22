@@ -1,3 +1,5 @@
+
+// app/api/auth/student/verify-token/route.js
 import { connectDB } from "@/lib/mongodb";
 import Student from "@/models/Student";
 
@@ -14,7 +16,7 @@ export async function GET(request) {
     }
 
     await connectDB();
-    
+
     const student = await Student.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() }

@@ -1,79 +1,61 @@
+
 // app/api/auth/student/reset-password/route.js
 import { connectDB } from "@/lib/mongodb";
 import Student from "@/models/Student";
-import bcrypt from 'bcryptjs';
+
+const SPECIAL_CHARS = '!@#$%^&*(),.?{}';
 
 export async function POST(request) {
   try {
-    console.log('=== Starting Password Reset ===');
     const { token, password } = await request.json();
 
     if (!token || !password) {
-      return new Response(
-        JSON.stringify({ message: "Token and password are required" }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      return Response.json(
+        { message: "Token and password are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password requirements
+    const passwordValidation = {
+      length: password.length >= 10,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      special: new RegExp(`[${SPECIAL_CHARS}]`).test(password)
+    };
+
+    if (!Object.values(passwordValidation).every(Boolean)) {
+      return Response.json(
+        { message: "Password must be at least 10 characters long and atleast one uppercase letter, one lowercase letter, and one special character" },
+        { status: 400 }
       );
     }
 
     await connectDB();
 
-    // Find student
-    let student = await Student.findOne({
+    const student = await Student.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() }
     });
 
     if (!student) {
-      return new Response(
-        JSON.stringify({ message: "Invalid or expired reset token" }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      return Response.json(
+        { message: "Invalid or expired reset token" },
+        { status: 400 }
       );
     }
 
-    console.log('Found student ID:', student._id);
-    console.log('Original password hash:', student.password);
+    student.password = password;
+    student.resetPasswordToken = undefined;
+    student.resetPasswordExpires = undefined;
+    await student.save();
 
-    // Generate new hash
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    console.log('Generated hash:', hashedPassword);
-
-    // Direct database update to ensure atomic operation
-    const result = await Student.findByIdAndUpdate(
-      student._id,
-      {
-        $set: {
-          password: hashedPassword,
-          resetPasswordToken: null,
-          resetPasswordExpires: null
-        }
-      },
-      { new: true }
-    );
-
-    console.log('Update result - new password hash:', result.password);
-
-    // Verify the update
-    const verifyStudent = await Student.findById(student._id);
-    console.log('Verification - stored password hash:', verifyStudent.password);
-
-    // Test the password
-    const testPassword = await bcrypt.compare(password, verifyStudent.password);
-    console.log('Password verification test:', testPassword);
-
-    return new Response(
-      JSON.stringify({ message: "Password reset successfully" }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-
+    return Response.json({ message: "Password reset successfully" });
   } catch (error) {
     console.error('Reset password error:', error);
-    return new Response(
-      JSON.stringify({ 
-        message: "Failed to reset password",
-        error: error.message 
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return Response.json(
+      { message: "Failed to reset password" },
+      { status: 500 }
     );
   }
 }

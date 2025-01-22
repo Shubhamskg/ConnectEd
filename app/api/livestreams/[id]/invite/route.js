@@ -118,7 +118,7 @@ export async function POST(req, { params }) {
       token: jwt.sign(
         { streamId: id, email },
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        // { expiresIn: '7d' }
       ),
       sentAt: new Date(),
       sentBy: user.id

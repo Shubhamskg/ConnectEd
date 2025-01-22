@@ -1,28 +1,21 @@
-// app/auth/teacher/forgot-password/page.jsx
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GraduationCap, ArrowLeft } from "lucide-react";
+import { useState } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function TeacherForgotPassword() {
-  const router = useRouter();
+function ResendSection({ email, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [email, setEmail] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const handleResend = async () => {
     setLoading(true);
+    setError("");
 
     try {
       const response = await fetch("/api/auth/teacher/forgot-password", {
@@ -34,11 +27,90 @@ export default function TeacherForgotPassword() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to process request");
+        throw new Error(data.message || "Failed to resend reset email");
       }
 
-      setSuccess("Password reset instructions have been sent to your email");
-      setEmail("");
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <Alert className="mt-4 bg-green-50 text-green-700">
+        <AlertDescription>
+          If an account exists, a new password reset email will be sent. Please check your inbox and spam folder.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+      <h3 className="text-sm font-medium mb-2">Haven't received the reset email?</h3>
+      {error && (
+        <Alert variant="destructive" className="mb-2">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="flex space-x-2">
+        <Button
+          onClick={handleResend}
+          disabled={loading}
+          variant="secondary"
+          size="sm"
+        >
+          {loading ? "Sending..." : "Resend Reset Email"}
+        </Button>
+        <Button
+          onClick={onClose}
+          variant="ghost"
+          size="sm"
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function TeacherForgotPassword() {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [showResend, setShowResend] = useState(false);
+  const [timeoutReached, setTimeoutReached] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    setSuccess(false);
+    setShowResend(false);
+
+    try {
+      const response = await fetch('/api/auth/teacher/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase() })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong');
+      }
+
+      setSuccess(true);
+      
+      // Show resend option after 30 seconds
+      setTimeout(() => {
+        setTimeoutReached(true);
+      }, 30000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -47,57 +119,82 @@ export default function TeacherForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
+    <div className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
       <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          {/* <div className="flex items-center gap-2 text-[#3b82f6]">
-            <GraduationCap className="h-8 w-8" />
-            <span className="text-2xl font-bold">ConnectEd</span>
-          </div> */}
-          <CardTitle className="text-2xl">Reset Teacher Password</CardTitle>
-          <CardDescription>
-            Enter your email address and we'll send you password reset instructions
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email address and we'll send you a password reset link
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            
             {success && (
-              <Alert className="bg-green-50 text-green-700">
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
+              <div className="space-y-2">
+                <Alert className="bg-green-50 text-green-700">
+                  <AlertDescription>
+                    If an account exists with this email, you will receive password reset instructions.
+                  </AlertDescription>
+                </Alert>
+                
+                {timeoutReached && !showResend && (
+                  <div className="text-center">
+                    <Button
+                      variant="link"
+                      className="text-sm text-blue-600"
+                      onClick={() => setShowResend(true)}
+                    >
+                      Click here if you haven't received the reset email
+                    </Button>
+                  </div>
+                )}
+                
+                {showResend && (
+                  <ResendSection 
+                    email={email}
+                    onClose={() => setShowResend(false)}
+                  />
+                )}
+              </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your registered email"
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
-              disabled={loading}
-            >
-              {loading ? "Processing..." : "Send Reset Instructions"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            <Link 
-              href="/auth/teacher/login" 
-              className="text-[#3b82f6] hover:underline inline-flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Login
-            </Link>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your registered email"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || success}
+              >
+                {loading ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+
+              <div className="text-center text-sm">
+                Remember your password?{' '}
+                <Link
+                  href="/auth/teacher/login"
+                  className="text-blue-600 hover:underline"
+                >
+                  Log in
+                </Link>
+              </div>
+            </form>
           </div>
         </CardContent>
       </Card>

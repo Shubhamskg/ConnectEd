@@ -225,7 +225,7 @@ export default function TeacherLivestreamsPage() {
           {stream.type !== 'native' && (
             <div className="flex items-center text-sm text-muted-foreground">
               <ExternalLink className="w-4 h-4 mr-1" />
-              Via {stream.settings.platform}
+              Via {stream.type}
             </div>
           )}
 
@@ -637,9 +637,8 @@ export default function TeacherLivestreamsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateStream}>
             {renderDialogContent()}
-          </form>
+          
         </DialogContent>
       </Dialog>
     </div>

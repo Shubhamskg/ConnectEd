@@ -1,19 +1,28 @@
+
 // app/api/auth/teacher/resend-verification/route.js
 import { connectDB } from "@/lib/mongodb";
 import Teacher from "@/models/Teacher";
+import { sendVerificationEmail } from "@/lib/email";
 import crypto from 'crypto';
-import { sendVerificationEmail } from '@/lib/email';
 
 export async function POST(request) {
   try {
-    await connectDB();
     const { email } = await request.json();
 
-    const teacher = await Teacher.findOne({ email });
-    if (!teacher) {
+    if (!email) {
       return Response.json(
-        { message: "If an account exists, a verification email will be sent." }
+        { message: "Email is required" },
+        { status: 400 }
       );
+    }
+
+    await connectDB();
+    const teacher = await Teacher.findOne({ email: email.toLowerCase() });
+
+    if (!teacher) {
+      return Response.json({
+        message: "If an account exists, a verification email will be sent."
+      });
     }
 
     if (teacher.verified) {
@@ -23,7 +32,6 @@ export async function POST(request) {
       );
     }
 
-    // Generate new verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -32,20 +40,19 @@ export async function POST(request) {
     await teacher.save();
 
     await sendVerificationEmail({
-      email,
+      email: teacher.email,
+      name: `${teacher.firstName} ${teacher.lastName}`,
       token: verificationToken,
-      name: teacher.name,
       role: 'teacher'
     });
 
     return Response.json({
       message: "If an account exists, a verification email will be sent."
     });
-
   } catch (error) {
     console.error('Resend verification error:', error);
     return Response.json(
-      { message: "Internal server error" },
+      { message: "Failed to send verification email" },
       { status: 500 }
     );
   }
