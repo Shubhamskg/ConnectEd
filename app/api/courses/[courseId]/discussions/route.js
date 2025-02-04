@@ -8,7 +8,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 async function getUser(request) {
-  const cookieStore =await cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth-token');
 
   if (!token) {
@@ -35,7 +35,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    const { courseId } =await params;
+    const { courseId } = await params;
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'all';
     const search = searchParams.get('search') || '';
@@ -75,7 +75,7 @@ export async function GET(request, { params }) {
       .sort({ pinned: -1, lastActivity: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('authorId', 'name avatar')
+      .populate('authorId', 'firstName lastName email profileImage')
       .lean();
 
     // Get total count
@@ -97,8 +97,9 @@ export async function GET(request, { params }) {
       lastActivity: discussion.lastActivity,
       author: {
         id: discussion.authorId._id,
-        name: discussion.authorId.name,
-        avatar: discussion.authorId.avatar
+        name: `${discussion.authorId.firstName} ${discussion.authorId.lastName}`,
+        email: discussion.authorId.email,
+        avatar: discussion.authorId.profileImage
       },
       userVote: discussion.voters.find(v => v.userId.equals(user.id))?.voteType,
       replies: discussion.replies?.map(reply => ({
@@ -108,10 +109,11 @@ export async function GET(request, { params }) {
         createdAt: reply.createdAt,
         author: {
           id: reply.authorId,
-          name: reply.authorName,
-          avatar: reply.authorAvatar
+          name: `${reply.authorFirstName} ${reply.authorLastName}`,
+          email: reply.authorEmail,
+          avatar: reply.authorProfileImage
         },
-        isInstructorResponse: reply.isInstructorResponse,
+        isTeacherResponse: reply.isTeacherResponse,
         userVote: reply.voters.find(v => v.userId.equals(user.id))?.voteType
       }))
     }));
@@ -146,7 +148,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const { courseId } =await params;
+    const { courseId } = await params;
     const body = await request.json();
     const { title, content, type, tags } = body;
 
@@ -186,7 +188,8 @@ export async function POST(request, { params }) {
         createdAt: discussion.createdAt,
         author: {
           id: user.id,
-          name: user.name
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email
         },
         votes: 0,
         replies: []

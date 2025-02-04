@@ -34,12 +34,18 @@ import {
   BarChart,
   Clock,
   Search,
+  Calendar,
+  Globe,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "./ui/tabs";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [user, setUser] = useState(null);
   const router = useRouter();
 
@@ -57,8 +63,14 @@ export function Navbar() {
       const response = await fetch('/api/auth/check', {
         credentials: 'include'
       });
+      const data = await response.json();
+      const role = data.user?.role || 'student';
       if (response.ok) {
-        const data = await response.json();
+        if (data.code === 'TOKEN_EXPIRED') {
+          await handleLogout(); 
+          router.push(`/auth/${role}/login`);
+        }
+        
         setUser(data.user);
       }
     } catch (error) {
@@ -86,37 +98,28 @@ export function Navbar() {
   };
 
   const categories = [
-    { name: "Dentistry", href: "/courses/category/dentistry" },
-    { name: "Medical", href: "/courses/category/medical" },
-    { name: "Nursing", href: "/courses/category/nursing" },
+    { name: "Dentistry", href: "/explore?category=dentistry" },
+    { name: "Medical", href: "/explore?category=medical" },
+    { name: "Nursing", href: "/explore?category=nursing" },
   ];
 
   const getNavItems = () => {
     if (user?.role === 'teacher') {
       return [
-        // { label: "Dashboard", icon: Layout, href: "/dashboard/teacher" },
         { label: "My Courses", icon: BookOpen, href: "/dashboard/teacher/courses" },
-        // { label: "Students", icon: GraduationCap, href: "/dashboard/teacher/students" },
-        // { label: "Live Classes", icon: MessageSquare, href: "/dashboard/teacher/live-stream" },
-        // { label: "Earnings", icon: BarChart, href: "/dashboard/teacher/earnings" },
       ];
     }
     return [
       { label: "My Learning", icon: BookOpen, href: "/dashboard/student" },
-      // { label: "Assignments", icon: FileText, href: "/dashboard/student/assignments" },
-      // { label: "Discussions", icon: MessageSquare, href: "/dashboard/student/discussions" },
-      // { label: "Schedule", icon: Clock, href: "/dashboard/student/schedule" },
     ];
   };
 
-  // Function to get user's full name
   const getUserFullName = () => {
     if (!user) return '';
     const { firstName, middleName, lastName } = user;
     return [firstName, middleName, lastName].filter(Boolean).join(' ');
   };
 
-  // Function to get user's initials
   const getUserInitials = () => {
     if (!user) return '';
     return [user.firstName, user.lastName]
@@ -128,7 +131,7 @@ export function Navbar() {
 
   return (
     <header
-      className={`top-0 z-50 w-full transition-all duration-200 bg-gray-50 ${
+      className={`sticky top-0 z-50 w-full transition-all duration-200 bg-white ${
         isScrolled ? "shadow-sm" : ""
       }`}
     >
@@ -180,14 +183,10 @@ export function Navbar() {
             asChild
             className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
           >
-            <Link href="/courses">Explore Courses</Link>
-          </Button>
-          <Button 
-            variant="ghost" 
-            asChild
-            className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
-          >
-            <Link href="/events">Explore Events</Link>
+            <Link href="/explore" className="flex items-center">
+              <Globe className="h-4 w-4 mr-2" />
+              Explore
+            </Link>
           </Button>
 
           {!user && (
@@ -203,16 +202,15 @@ export function Navbar() {
 
         {/* Right Section */}
         <div className="flex items-center space-x-6">
-          {/* Search */}
-          <div className="hidden md:flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="text-gray-600 hover:text-blue-600"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          </div>
+          {/* Search Button that redirects to explore page with search focused */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-gray-600 hover:text-blue-600"
+            onClick={() => router.push('/explore?focus=search')}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
 
           {user ? (
             <>
@@ -258,12 +256,6 @@ export function Navbar() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  {/* <DropdownMenuItem className="py-2">
-                    <Link href="/settings" className="flex items-center w-full">
-                      <Settings className="h-4 w-4 mr-3 text-gray-500" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem> */}
                   <DropdownMenuItem 
                     className="text-red-600 py-2" 
                     onClick={handleLogout}
@@ -323,6 +315,18 @@ export function Navbar() {
                         <p className="text-sm text-gray-500 capitalize">{user.role}</p>
                       </div>
                     </div>
+
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start py-6"
+                      asChild
+                    >
+                      <Link href="/explore" className="flex items-center">
+                        <Globe className="h-5 w-5 mr-3 text-gray-500" />
+                        Explore
+                      </Link>
+                    </Button>
+
                     <div className="space-y-1">
                       {getNavItems().map((item) => (
                         <Button
@@ -338,17 +342,7 @@ export function Navbar() {
                         </Button>
                       ))}
                     </div>
-                    <div className="border-t pt-6 space-y-1">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start py-6"
-                        asChild
-                      >
-                        <Link href="/settings">
-                          <Settings className="h-5 w-5 mr-3 text-gray-500" />
-                          Settings
-                        </Link>
-                      </Button>
+                    <div className="border-t pt-6">
                       <Button
                         variant="ghost"
                         className="w-full justify-start text-red-600 py-6"
@@ -362,8 +356,9 @@ export function Navbar() {
                 ) : (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Link href="/courses" className="block py-3 text-gray-700 hover:text-blue-600">
-                        Browse Courses
+                      <Link href="/explore" className="flex items-center py-3 text-gray-700 hover:text-blue-600">
+                        <Globe className="h-5 w-5 mr-2" />
+                        Explore
                       </Link>
                       <Link href="/auth/teacher/login" className="block py-3 text-gray-700 hover:text-blue-600">
                         Teach on ConnectEd

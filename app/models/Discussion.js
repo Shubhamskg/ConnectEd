@@ -25,9 +25,15 @@ const replySchema = new mongoose.Schema({
     userId: mongoose.Schema.Types.ObjectId,
     voteType: String // 'up' or 'down'
   }],
-  isInstructorResponse: {
+  isTeacherResponse: {
     type: Boolean,
     default: false
+  },
+  authorDetails: {
+    firstName: String,
+    lastName: String,
+    department: String,
+    profileImage: String
   },
   attachments: [{
     type: String,
@@ -58,6 +64,13 @@ const discussionSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: ['Student', 'Teacher']
+  },
+  authorDetails: {
+    firstName: String,
+    lastName: String,
+    department: String,
+    profileImage: String,
+    qualification: String
   },
   title: {
     type: String,
@@ -91,6 +104,10 @@ const discussionSchema = new mongoose.Schema({
     default: false
   },
   pinned: {
+    type: Boolean,
+    default: false
+  },
+  teacherPinned: {
     type: Boolean,
     default: false
   },
@@ -134,6 +151,11 @@ discussionSchema.virtual('replyCount').get(function() {
 
 // Method to add a reply
 discussionSchema.methods.addReply = async function(reply) {
+  // Set isTeacherResponse if author is a teacher
+  if (reply.authorType === 'Teacher') {
+    reply.isTeacherResponse = true;
+  }
+  
   this.replies.push(reply);
   this.lastActivity = new Date();
   return this.save();
@@ -160,6 +182,21 @@ discussionSchema.methods.vote = async function(userId, voteType) {
   }
 
   return this.save();
+};
+
+// Method to get full author name
+discussionSchema.methods.getAuthorName = function() {
+  return this.authorDetails ? 
+    `${this.authorDetails.firstName} ${this.authorDetails.lastName}` : 
+    'Unknown User';
+};
+
+// Static method to find discussions by teacher
+discussionSchema.statics.findByTeacher = function(teacherId) {
+  return this.find({
+    authorId: teacherId,
+    authorType: 'Teacher'
+  }).sort({ createdAt: -1 });
 };
 
 const Discussion = mongoose.models.Discussion || mongoose.model('Discussion', discussionSchema);

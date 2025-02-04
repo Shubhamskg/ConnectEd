@@ -79,6 +79,22 @@ export async function GET(request) {
 
     } catch (err) {
       console.error('Token verification error:', err);
+      
+      // Check specifically for token expiration
+      if (err instanceof jwt.TokenExpiredError) {
+        // Clear the auth token cookie
+        const cookieStore = cookies();
+        cookieStore.delete('auth-token');
+        
+        return NextResponse.json(
+          { 
+            message: "Token expired",
+            code: "TOKEN_EXPIRED"  // Add a specific code for client-side handling
+          },
+          { status: 401 }
+        );
+      }
+      
       return NextResponse.json(
         { message: "Invalid token" },
         { status: 401 }

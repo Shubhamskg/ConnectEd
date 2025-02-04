@@ -91,7 +91,8 @@ function LearningOverview({ stats }) {
 }
 
 function ActiveCourses({ courses, onContinue }) {
-  const router=useRouter()
+  const router = useRouter();
+  
   if (!courses.length) {
     return (
       <div className="text-center py-12">
@@ -129,9 +130,19 @@ function ActiveCourses({ courses, onContinue }) {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold line-clamp-1">{course.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {course.instructor}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {course.teacher ? 
+                        `${course.teacher.firstName} ${course.teacher.lastName}` : 
+                        'Unknown Teacher'}
+                    </p>
+                    {course.teacher?.department && (
+                      <Badge variant="secondary" className="text-xs">
+                        <GraduationCap className="h-3 w-3 mr-1" />
+                        {course.teacher.department}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <Badge variant={course.progress === 100 ? "success" : "secondary"}>
                   {course.progress}% Complete
@@ -158,7 +169,7 @@ function Certificates({ certificates }) {
   if (!certificates.length) {
     return (
       <div className="text-center py-12">
-        {/* <Certificate className="h-12 w-12 mx-auto text-muted-foreground mb-4" /> */}
+        <Medal className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="font-medium text-lg mb-2">No Certificates Yet</h3>
         <p className="text-sm text-muted-foreground">
           Complete a course to earn your first certificate
@@ -173,12 +184,28 @@ function Certificates({ certificates }) {
         <Card key={cert.id} className="overflow-hidden">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
-              <div>
-                <Badge className="mb-2">Certificate</Badge>
-                <h3 className="font-semibold mb-1">{cert.courseTitle}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Completed on {new Date(cert.completedAt).toLocaleDateString()}
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <Badge className="mb-2">Certificate</Badge>
+                  <h3 className="font-semibold mb-1">{cert.courseTitle}</h3>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Completed on {new Date(cert.completedAt).toLocaleDateString()}</span>
+                    {cert.metadata?.teacher && (
+                      <>
+                        <span>•</span>
+                        <Badge variant="secondary" className="text-xs">
+                          <GraduationCap className="h-3 w-3 mr-1" />
+                          {`${cert.metadata.teacher.firstName} ${cert.metadata.teacher.lastName}`}
+                        </Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {cert.metadata?.teacher?.department && (
+                  <Badge variant="outline">
+                    {cert.metadata.teacher.department}
+                  </Badge>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => window.open(cert.url, '_blank')}
@@ -259,8 +286,18 @@ export default function StudentDashboard() {
         goalsRes.json()
       ]);
 
+      // Process courses data to ensure consistent teacher information
+      const processedCourses = coursesData.courses.map(course => ({
+        ...course,
+        teacher: course.teacher || {
+          firstName: course.instructorName?.split(' ')[0] || '',
+          lastName: course.instructorName?.split(' ').slice(1).join(' ') || '',
+          department: course.instructorDepartment
+        }
+      }));
+
       setStats(statsData);
-      setActiveCourses(coursesData.courses);
+      setActiveCourses(processedCourses);
       setCertificates(certificatesData.certificates);
       setGoals(goalsData.goals);
 
@@ -270,6 +307,7 @@ export default function StudentDashboard() {
       setLoading(false);
     }
   };
+
 
   const handleContinueLearning = (courseId) => {
     router.push(`/learn/${courseId}`);

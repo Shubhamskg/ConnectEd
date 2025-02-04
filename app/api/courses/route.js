@@ -1,8 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
-import Teacher from "@/models/Teacher"; 
-
-
+import Teacher from "@/models/Teacher";
 
 export async function GET(request) {
   try {
@@ -13,7 +11,7 @@ export async function GET(request) {
     const sort = searchParams.get('sort') || 'newest';
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 12;
-    const instructor = searchParams.get('instructor');
+    const teacher = searchParams.get('teacher');
 
     await connectDB();
 
@@ -30,9 +28,9 @@ export async function GET(request) {
       query.level = level;
     }
     
-    // Instructor filter
-    if (instructor && instructor !== 'all') {
-      query.teacherId = instructor;
+    // Teacher filter
+    if (teacher && teacher !== 'all') {
+      query.teacherId = teacher;
     }
     
     // Search filter
@@ -71,26 +69,35 @@ export async function GET(request) {
         .sort(sortQuery)
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate('teacherId', 'name avatar specialty bio rating coursesCount studentsCount')
+        .populate('teacherId', 'firstName lastName email phoneNumber department qualification experience subjectsToTeach bio profileImage stats')
     ]);
 
-    // Transform the data to include instructor information
+    // Transform the data to include teacher information
     const transformedCourses = courses.map(course => {
       const courseObj = course.toObject();
+      const teacher = courseObj.teacherId;
+      
       return {
         ...courseObj,
-        teacherName: courseObj.teacherId?.name || courseObj.teacherName,
-        teacherAvatar: courseObj.teacherId?.avatar,
-        teacherSpecialty: courseObj.teacherId?.specialty,
-        instructor: courseObj.teacherId ? {
-          id: courseObj.teacherId._id,
-          name: courseObj.teacherId.name,
-          avatar: courseObj.teacherId.avatar,
-          specialty: courseObj.teacherId.specialty,
-          bio: courseObj.teacherId.bio,
-          rating: courseObj.teacherId.rating,
-          coursesCount: courseObj.teacherId.coursesCount,
-          studentsCount: courseObj.teacherId.studentsCount
+        teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : courseObj.teacherName,
+        teacherAvatar: teacher?.profileImage,
+        teacherSpecialty: teacher?.department,
+        teacher: teacher ? {
+          id: teacher._id,
+          name: `${teacher.firstName} ${teacher.lastName}`,
+          email: teacher.email,
+          phoneNumber: teacher.phoneNumber,
+          department: teacher.department,
+          qualification: teacher.qualification,
+          experience: teacher.experience,
+          subjectsToTeach: teacher.subjectsToTeach,
+          bio: teacher.bio,
+          profileImage: teacher.profileImage,
+          stats: {
+            totalStudents: teacher.stats.totalStudents,
+            activeCourses: teacher.stats.activeCourses,
+            completionRate: teacher.stats.completionRate
+          }
         } : null
       };
     });
@@ -112,14 +119,14 @@ export async function GET(request) {
   }
 }
 
-// Helper function to get featured instructors for a domain
-export async function getFeaturedInstructors(domain) {
+// Helper function to get featured teachers for a domain
+export async function getFeaturedTeachers(domain) {
   try {
-    const instructors = await Teacher.aggregate([
-      { 
-        $match: { 
-          role: 'teacher',
-          domains: { $regex: new RegExp(domain, 'i') }
+    const teachers = await Teacher.aggregate([
+      {
+        $match: {
+          verified: true,
+          subjectsToTeach: { $regex: new RegExp(domain, 'i') }
         }
       },
       {
@@ -133,22 +140,14 @@ export async function getFeaturedInstructors(domain) {
       {
         $addFields: {
           coursesCount: { $size: '$courses' },
-          totalStudents: {
-            $reduce: {
-              input: '$courses',
-              initialValue: 0,
-              in: { $add: ['$$value', '$$this.enrolledStudents'] }
-            }
-          },
-          averageRating: {
-            $avg: '$courses.rating'
-          }
+          totalStudents: '$stats.totalStudents',
+          completionRate: '$stats.completionRate'
         }
       },
       {
         $sort: {
           totalStudents: -1,
-          averageRating: -1
+          completionRate: -1
         }
       },
       {
@@ -157,20 +156,21 @@ export async function getFeaturedInstructors(domain) {
       {
         $project: {
           _id: 1,
-          name: 1,
-          avatar: 1,
-          specialty: 1,
+          name: { $concat: ['$firstName', ' ', '$lastName'] },
+          profileImage: 1,
+          department: 1,
+          qualification: 1,
+          experience: 1,
           bio: 1,
           coursesCount: 1,
-          totalStudents: 1,
-          averageRating: 1
+          stats: 1
         }
       }
     ]);
 
-    return instructors;
+    return teachers;
   } catch (error) {
-    console.error('Featured instructors fetch error:', error);
+    console.error('Featured teachers fetch error:', error);
     throw error;
   }
 }

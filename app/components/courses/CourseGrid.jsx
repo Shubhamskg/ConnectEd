@@ -2,7 +2,7 @@
 import { CourseCard } from "./CourseCard";
 import { CourseListItem } from "./CourseListItem";
 
-// Sample course data
+// Sample course data with updated teacher model
 const sampleCourses = [
   {
     id: 1,
@@ -16,11 +16,17 @@ const sampleCourses = [
     duration: "20 hours",
     lessons: 42,
     price: 99.99,
-    instructor: {
-      name: "Sarah Johnson",
-      role: "Senior Developer",
-      avatar: "/api/placeholder/40/40",
-    },
+    teacher: {
+      id: "t1",
+      firstName: "Sarah",
+      lastName: "Johnson",
+      email: "sarah.johnson@example.com",
+      department: "Computer Science",
+      qualification: "Ph.D. in Computer Science",
+      experience: "10+ years in Web Development",
+      profileImage: "/api/placeholder/40/40",
+      subjects: ["Web Development", "JavaScript", "React"]
+    }
   },
   {
     id: 2,
@@ -34,11 +40,17 @@ const sampleCourses = [
     duration: "15 hours",
     lessons: 35,
     price: 79.99,
-    instructor: {
-      name: "Michael Chen",
-      role: "UX Designer",
-      avatar: "/api/placeholder/40/40",
-    },
+    teacher: {
+      id: "t2",
+      firstName: "Michael",
+      lastName: "Chen",
+      email: "michael.chen@example.com",
+      department: "Design",
+      qualification: "Master's in Interactive Design",
+      experience: "8 years in UX Design",
+      profileImage: "/api/placeholder/40/40",
+      subjects: ["UI Design", "UX Design", "Design Systems"]
+    }
   },
   {
     id: 3,
@@ -52,12 +64,18 @@ const sampleCourses = [
     duration: "25 hours",
     lessons: 48,
     price: 129.99,
-    instructor: {
-      name: "Alex Turner",
-      role: "Data Scientist",
-      avatar: "/api/placeholder/40/40",
-    },
-  },
+    teacher: {
+      id: "t3",
+      firstName: "Alex",
+      lastName: "Turner",
+      email: "alex.turner@example.com",
+      department: "Data Science",
+      qualification: "Ph.D. in Statistics",
+      experience: "12 years in Data Science",
+      profileImage: "/api/placeholder/40/40",
+      subjects: ["Data Analysis", "Machine Learning", "Statistics"]
+    }
+  }
 ];
 
 export function CourseGrid({ courses = sampleCourses, view = 'grid', userType = 'student' }) {
@@ -87,11 +105,24 @@ export function CourseGrid({ courses = sampleCourses, view = 'grid', userType = 
     );
   }
 
+  // Format courses to ensure consistent structure
+  const formattedCourses = courses.map(course => ({
+    ...course,
+    // Handle both old and new data structures
+    teacher: course.teacher || {
+      id: course.instructor?.id,
+      firstName: course.instructor?.name?.split(' ')[0] || '',
+      lastName: course.instructor?.name?.split(' ').slice(1).join(' ') || '',
+      profileImage: course.instructor?.avatar,
+      department: course.instructor?.role
+    }
+  }));
+
   // List view
   if (view === 'list') {
     return (
       <div className="space-y-4">
-        {courses.map((course) => (
+        {formattedCourses.map((course) => (
           <CourseListItem
             key={course.id}
             course={course}
@@ -109,7 +140,7 @@ export function CourseGrid({ courses = sampleCourses, view = 'grid', userType = 
         ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         : "space-y-4"
     }>
-      {courses.map((course) => (
+      {formattedCourses.map((course) => (
         view === 'grid' ? (
           <CourseCard key={course.id} course={course} />
         ) : (

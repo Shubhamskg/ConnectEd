@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, GraduationCap } from "lucide-react";
 
 export function StudentCourseCard({ course, onContinue }) {
   const handleContinue = () => {
@@ -33,6 +33,11 @@ export function StudentCourseCard({ course, onContinue }) {
     return null;
   };
 
+  // Get teacher name, handling both old and new data structures
+  const teacherName = course.teacher ? 
+    `${course.teacher.firstName} ${course.teacher.lastName}` : 
+    course.teacherName || 'Unknown Teacher';
+
   return (
     <Card className="overflow-hidden">
       <div className="aspect-video relative">
@@ -53,9 +58,17 @@ export function StudentCourseCard({ course, onContinue }) {
           <div className="flex items-start justify-between">
             <div>
               <h3 className="font-semibold line-clamp-1">{course.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {course.instructorName}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  {teacherName}
+                </p>
+                {course.teacher?.department && (
+                  <Badge variant="outline" className="text-xs">
+                    <GraduationCap className="h-3 w-3 mr-1" />
+                    {course.teacher.department}
+                  </Badge>
+                )}
+              </div>
             </div>
             <Badge variant={course.progress === 100 ? "success" : "secondary"}>
               {course.progress}% Complete

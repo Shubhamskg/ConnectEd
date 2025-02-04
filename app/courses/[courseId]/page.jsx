@@ -112,32 +112,60 @@ function CourseSyllabus({ sections }) {
   );
 }
 
-function InstructorCard({ instructor }) {
+function TeacherCard({ teacher }) {
+  if (!teacher) return null;
+
+  const {
+    firstName = '',
+    lastName = '',
+    profileImage = '/placeholder-avatar.jpg',
+    department = '',
+    qualification = '',
+    experience = '',
+    bio = '',
+    stats = {}
+  } = teacher;
+
+  const teacherName = `${firstName} ${lastName}`;
+
   return (
     <div className="flex gap-4 items-start">
       <img
-        src={instructor.avatar || '/placeholder-avatar.jpg'}
-        alt={instructor.name}
+        src={profileImage}
+        alt={teacherName}
         className="w-16 h-16 rounded-full object-cover"
       />
       <div>
-        <h3 className="font-semibold text-lg">{instructor.name}</h3>
-        <p className="text-muted-foreground">{instructor.title}</p>
+        <h3 className="font-semibold text-lg">{teacherName}</h3>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">
+            <GraduationCap className="h-4 w-4 mr-1" />
+            {department}
+          </Badge>
+          {qualification && (
+            <Badge variant="outline">{qualification}</Badge>
+          )}
+        </div>
         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4" />
-            {instructor.rating} Instructor Rating
+            {stats.rating || 0} Teacher Rating
           </div>
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4" />
-            {instructor.studentsCount} Students
+            {stats.totalStudents || 0} Students
           </div>
           <div className="flex items-center gap-1">
             <PlayCircle className="h-4 w-4" />
-            {instructor.coursesCount} Courses
+            {stats.coursesCount || 0} Courses
           </div>
         </div>
-        <p className="mt-4 text-sm line-clamp-4">{instructor.bio}</p>
+        {experience && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            {experience}
+          </div>
+        )}
+        <p className="mt-4 text-sm line-clamp-4">{bio}</p>
       </div>
     </div>
   );
@@ -341,10 +369,12 @@ export default function CourseDetails({ params }) {
                     <BarChart className="h-4 w-4 mr-1" />
                     {course.level}
                   </Badge>
-                  <Badge variant="outline" className="text-sm">
-                    <Globe className="h-4 w-4 mr-1" />
-                    {course.language}
-                  </Badge>
+                  {course.teacher?.department && (
+                    <Badge variant="secondary" className="text-sm">
+                      <BookOpen className="h-4 w-4 mr-1" />
+                      {course.teacher.department}
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center">
@@ -360,6 +390,23 @@ export default function CourseDetails({ params }) {
                     {Math.ceil(course.totalDuration / 60)} hours
                   </div>
                 </div>
+                {course.teacher && (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={course.teacher.profileImage}
+                      alt={`${course.teacher.firstName} ${course.teacher.lastName}`}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div>
+                      <div className="font-medium">
+                        {`${course.teacher.firstName} ${course.teacher.lastName}`}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {course.teacher.qualification}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <div className="text-sm text-muted-foreground">
                     Last updated {new Date(course.lastUpdated).toLocaleDateString()}
@@ -367,7 +414,6 @@ export default function CourseDetails({ params }) {
                 </div>
               </div>
             </div>
-            <div>
               <Card className="sticky top-4">
                 <div className="aspect-video relative overflow-hidden rounded-t-lg">
                   {course.previewVideo ? (
@@ -470,17 +516,16 @@ export default function CourseDetails({ params }) {
           </div>
         </div>
       </div>
-    </div>
 
     {/* Course Content */}
     <div className="container mx-auto px-4 py-12">
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-          <TabsTrigger value="instructor">Instructor</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
-        </TabsList>
+      <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
+            <TabsTrigger value="teacher">Teacher</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          </TabsList>
 
         <TabsContent value="overview">
           <div className="grid md:grid-cols-2 gap-8">
@@ -544,20 +589,20 @@ export default function CourseDetails({ params }) {
         </TabsContent>
 
         <TabsContent value="curriculum">
-          <CourseSyllabus sections={course.sections} />
-        </TabsContent>
+            <CourseSyllabus sections={course?.sections} />
+          </TabsContent>
 
-        <TabsContent value="instructor">
-          <InstructorCard instructor={course.instructor} />
-        </TabsContent>
+          <TabsContent value="teacher">
+            <TeacherCard teacher={course?.teacher} />
+          </TabsContent>
 
-        <TabsContent value="reviews">
-          <ReviewSection
-            reviews={course.reviews}
-            rating={course.rating}
-            totalReviews={course.totalRatings}
-          />
-        </TabsContent>
+          <TabsContent value="reviews">
+            <ReviewSection
+              reviews={course.reviews}
+              rating={course.rating}
+              totalReviews={course.totalRatings}
+            />
+          </TabsContent>
       </Tabs>
     </div>
   </div>

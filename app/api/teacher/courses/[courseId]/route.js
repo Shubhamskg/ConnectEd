@@ -25,8 +25,12 @@ async function verifyAuth() {
 
     return {
       id: teacher._id.toString(),
-      name: teacher.name,
+      firstName: teacher.firstName,
+      lastName: teacher.lastName,
+      name: `${teacher.firstName} ${teacher.lastName}`,
       email: teacher.email,
+      department: teacher.department,
+      qualification: teacher.qualification,
       role: 'teacher'
     };
   } catch (error) {
@@ -39,7 +43,6 @@ async function verifyAuth() {
 export async function GET(request, { params }) {
   try {
     const user = await verifyAuth();
-    console.log("user",user)
     
     if (!user) {
       return NextResponse.json(
@@ -48,12 +51,12 @@ export async function GET(request, { params }) {
       );
     }
 
-    const { courseId } =await params;
+    const { courseId } = await params;
     await connectDB();
 
     // Find course with populated teacher information
     const course = await Course.findById(courseId)
-      .populate('teacherId', 'name avatar specialty bio')
+      .populate('teacherId', 'firstName lastName email profileImage department qualification experience subjectsToTeach bio')
       .lean();
 
     if (!course) {
@@ -93,13 +96,19 @@ export async function GET(request, { params }) {
       createdAt: course.createdAt,
       updatedAt: course.updatedAt,
       slug: course.slug,
-      instructor: {
-        id: course.teacherId?._id,
-        name: course.teacherId?.name,
-        avatar: course.teacherId?.avatar,
-        specialty: course.teacherId?.specialty,
-        bio: course.teacherId?.bio
-      },
+      teacher: course.teacherId ? {
+        id: course.teacherId._id,
+        firstName: course.teacherId.firstName,
+        lastName: course.teacherId.lastName,
+        name: `${course.teacherId.firstName} ${course.teacherId.lastName}`,
+        email: course.teacherId.email,
+        avatar: course.teacherId.profileImage,
+        department: course.teacherId.department,
+        qualification: course.teacherId.qualification,
+        experience: course.teacherId.experience,
+        subjects: course.teacherId.subjectsToTeach,
+        bio: course.teacherId.bio
+      } : null,
       sections: course.sections.map(section => ({
         id: section._id,
         title: section.title,
@@ -116,7 +125,6 @@ export async function GET(request, { params }) {
         }))
       }))
     };
-    
 
     return NextResponse.json({ course: formattedCourse });
 
@@ -129,8 +137,6 @@ export async function GET(request, { params }) {
   }
 }
 
-
-
 export async function PATCH(request, { params }) {
   try {
     const user = await verifyAuth();
@@ -142,7 +148,7 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    const { courseId } =await params;
+    const { courseId } = await params;
     const updates = await request.json();
 
     await connectDB();
@@ -195,7 +201,8 @@ export async function PATCH(request, { params }) {
         from: course.status,
         to: updates.status,
         changedAt: new Date(),
-        changedBy: user.id
+        changedBy: user.id,
+        changedByName: `${user.firstName} ${user.lastName}`
       });
     }
 
@@ -207,7 +214,7 @@ export async function PATCH(request, { params }) {
         lastUpdated: new Date()
       },
       { new: true }
-    );
+    ).populate('teacherId', 'firstName lastName email profileImage department qualification experience subjectsToTeach bio');
 
     return NextResponse.json({
       message: 'Course updated successfully',

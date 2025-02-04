@@ -37,7 +37,8 @@ import {
   ArrowUp,
   ArrowDown,
   CheckCircle,
-  Loader2
+  Loader2,
+  GraduationCap
 } from "lucide-react";
 
 function DiscussionPost({ discussion, onVote, onReply, onPin, isTeacher }) {
@@ -68,6 +69,10 @@ function DiscussionPost({ discussion, onVote, onReply, onPin, isTeacher }) {
       setSubmitting(false);
     }
   };
+
+  const authorName = discussion.author ? 
+    `${discussion.author.firstName} ${discussion.author.lastName}` : 
+    'Unknown User';
 
   return (
     <Card className="mb-4">
@@ -100,7 +105,13 @@ function DiscussionPost({ discussion, onVote, onReply, onPin, isTeacher }) {
               <div>
                 <h3 className="font-semibold text-lg">{discussion.title}</h3>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
-                  <span>{discussion.author}</span>
+                  <span>{authorName}</span>
+                  {discussion.author?.department && (
+                    <>
+                      <span>•</span>
+                      <span>{discussion.author.department}</span>
+                    </>
+                  )}
                   <span>•</span>
                   <span>{new Date(discussion.createdAt).toLocaleDateString()}</span>
                   {discussion.solved && (
@@ -207,9 +218,19 @@ function DiscussionPost({ discussion, onVote, onReply, onPin, isTeacher }) {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium">{reply.author}</span>
-                        {reply.isInstructorResponse && (
-                          <Badge variant="secondary">Instructor</Badge>
+                        <span className="font-medium">
+                          {`${reply.author.firstName} ${reply.author.lastName}`}
+                        </span>
+                        {reply.isTeacherResponse && (
+                          <Badge variant="secondary" className="flex items-center">
+                            <GraduationCap className="h-3 w-3 mr-1" />
+                            Teacher
+                          </Badge>
+                        )}
+                        {reply.author?.department && (
+                          <span className="text-sm text-muted-foreground">
+                            {reply.author.department}
+                          </span>
                         )}
                       </div>
                       <span className="text-sm text-muted-foreground">

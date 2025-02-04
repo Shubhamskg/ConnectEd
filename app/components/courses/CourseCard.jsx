@@ -56,7 +56,7 @@ export function CourseCard({ course }) {
           <div className="flex items-center gap-2">
             <div className="relative w-10 h-10">
               <Image
-                src={course.instructor.avatar || "/placeholders/course-1.jpeg"}
+                src={course?.instructor?.avatar || "/placeholders/course-1.jpeg"}
                 alt={course.teacherName}
                 className="rounded-full object-cover"
                 fill

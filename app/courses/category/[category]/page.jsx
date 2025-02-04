@@ -143,7 +143,7 @@ function CategoryContent() {
               <CardHeader className="text-center">
                 <div className="mx-auto mb-4 w-24 h-24 rounded-full overflow-hidden">
                   <img
-                    src={instructor.avatar || '/placeholder-avatar.jpg'}
+                    src={instructor?.avatar || '/placeholder-avatar.jpg'}
                     alt={instructor.name}
                     className="w-full h-full object-cover"
                   />

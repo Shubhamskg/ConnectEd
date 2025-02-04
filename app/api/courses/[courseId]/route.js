@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
     const course = await Course.findById(courseId)
       .populate('teacherId', 'teacherName')
       .lean();
-
+    console.log("course",course)
     if (!course) {
       return Response.json(
         { message: "Course not found" },

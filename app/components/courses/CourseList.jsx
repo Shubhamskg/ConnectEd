@@ -31,7 +31,17 @@ export function CourseList({ userType }) {
     {
       id: 1,
       title: "Advanced Web Development",
-      instructor: "Dr. Sarah Johnson",
+      teacher: {
+        id: "t1",
+        firstName: "Sarah",
+        lastName: "Johnson",
+        email: "sarah.johnson@example.com",
+        department: "Computer Science",
+        qualification: "Ph.D. in Computer Science",
+        experience: "10+ years in Web Development",
+        profileImage: "/placeholders/teacher-1.jpg",
+        subjects: ["Web Development", "JavaScript", "React"]
+      },
       thumbnail: "/placeholders/course-1.jpeg",
       category: "Development",
       level: "Advanced",
@@ -48,7 +58,17 @@ export function CourseList({ userType }) {
     {
       id: 2,
       title: "Data Structures & Algorithms",
-      instructor: "Prof. Michael Chen",
+      teacher: {
+        id: "t2",
+        firstName: "Michael",
+        lastName: "Chen",
+        email: "michael.chen@example.com",
+        department: "Computer Science",
+        qualification: "Ph.D. in Computer Science",
+        experience: "15 years in Algorithm Design",
+        profileImage: "/placeholders/teacher-2.jpg",
+        subjects: ["Algorithms", "Data Structures", "Python"]
+      },
       thumbnail: "/placeholders/course-2.jpg",
       category: "Computer Science",
       level: "Intermediate",

@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
-import Teacher from "@/models/Teacher";
+import mongoose from "mongoose";
 
 export async function GET(request) {
   try {
@@ -18,115 +18,93 @@ export async function GET(request) {
 
     await connectDB();
 
-    // Build query
+    // Build base query
     let query = {
-      status: 'published' // Only show published courses
+      status: 'published'
     };
 
-    // Search filter
+    // Add search filter
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+      query.$text = { $search: search };
     }
 
-    // Category filter
+    // Add category filter
     if (category && category !== 'all') {
-      query.category = { $regex: new RegExp(category, 'i') };
+      query.category = category;
     }
 
-    // Level filter
+    // Add level filter
     if (level && level !== 'all') {
       query.level = level;
     }
 
-    // Price filter
+    // Add price filter
     if (price === 'free') {
       query.price = 0;
     } else if (price === 'paid') {
       query.price = { $gt: 0 };
     }
 
-    // Build sort object
-    let sortQuery = {};
-    switch (sort) {
-      case 'newest':
-        sortQuery = { createdAt: -1 };
-        break;
-      case 'price-low':
-        sortQuery = { price: 1 };
-        break;
-      case 'price-high':
-        sortQuery = { price: -1 };
-        break;
-      case 'rating':
-        sortQuery = { rating: -1 };
-        break;
-      case 'popular':
-      default:
-        sortQuery = { enrolledStudents: -1 };
-        break;
-    }
+    // Define sort options
+    const sortOptions = {
+      newest: { createdAt: -1 },
+      'price-low': { price: 1 },
+      'price-high': { price: -1 },
+      rating: { rating: -1 },
+      popular: { enrolledStudents: -1 }
+    };
 
-    // Execute query with pagination
+    // Get the appropriate sort object
+    const sortQuery = sortOptions[sort] || sortOptions.popular;
+
+    // Calculate pagination
     const skip = (page - 1) * limit;
 
-    // Get courses with instructor information
-    const [courses, total] = await Promise.all([
-      Course.aggregate([
-        { $match: query },
-        { $sort: sortQuery },
-        { $skip: skip },
-        { $limit: limit },
-        // Lookup instructor details
-        {
-          $lookup: {
-            from: 'teachers',
-            localField: 'teacherId',
-            foreignField: '_id',
-            as: 'instructor'
-          }
-        },
-        // Unwind instructor array (converts array to object)
-        { $unwind: '$instructor' },
-        // Project only needed fields
-        {
-          $project: {
-            _id: 1,
-            title: 1,
-            description: 1,
-            thumbnail: 1,
-            price: 1,
-            level: 1,
-            category: 1,
-            rating: 1,
-            enrolledStudents: 1,
-            totalDuration: 1,
-            featured: 1,
-            createdAt: 1,
-            'instructor._id': 1,
-            'instructor.name': 1,
-            'instructor.avatar': 1,
-            'instructor.expertise': 1
-          }
-        }
-      ]),
-      Course.countDocuments(query)
-    ]);
+    // Execute query with population
+    const courses = await Course.find(query)
+      .populate({
+        path: 'teacherId',
+        select: 'firstName lastName email profileImage department qualification experience subjectsToTeach',
+        model: 'Teacher'
+      })
+      .sort(sortQuery)
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    // Calculate total pages
-    const totalPages = Math.ceil(total / limit);
+    // Get total count
+    const totalCourses = await Course.countDocuments(query);
 
-    // Format response
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCourses / limit);
+
+    // Format the response
     const formattedCourses = courses.map(course => ({
-      ...course,
-      instructor: {
-        id: course.instructor._id,
-        name: course.instructor.name,
-        avatar: course.instructor.avatar,
-        expertise: course.instructor.expertise
-      }
+      id: course._id,
+      title: course.title,
+      description: course.description,
+      thumbnail: course.thumbnail,
+      price: course.price,
+      discountedPrice: course.discountedPrice,
+      level: course.level,
+      category: course.category,
+      rating: course.rating,
+      totalRatings: course.totalRatings,
+      enrolledStudents: course.enrolledStudents,
+      totalDuration: course.totalDuration,
+      totalLessons: course.totalLessons,
+      featured: course.featured,
+      createdAt: course.createdAt,
+      teacher: course.teacherId ? {
+        id: course.teacherId._id,
+        name: `${course.teacherId.firstName} ${course.teacherId.lastName}`,
+        email: course.teacherId.email,
+        avatar: course.teacherId.profileImage,
+        department: course.teacherId.department,
+        qualification: course.teacherId.qualification,
+        experience: course.teacherId.experience,
+        subjects: course.teacherId.subjectsToTeach
+      } : null
     }));
 
     return NextResponse.json({
@@ -134,7 +112,7 @@ export async function GET(request) {
       pagination: {
         currentPage: page,
         totalPages,
-        totalCourses: total,
+        totalCourses,
         hasMore: page < totalPages
       }
     });
@@ -142,7 +120,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Course search error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch courses' },
+      { error: 'Failed to fetch courses', details: error.message },
       { status: 500 }
     );
   }

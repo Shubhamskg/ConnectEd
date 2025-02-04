@@ -4,16 +4,13 @@ import Course from "@/models/Course";
 import CourseEnrollment from "@/models/CourseEnrollment";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-import Teacher from "@/models/Teacher";
 import mongoose from "mongoose";
 
-async function getUser(request) {
-  const cookieStore = await cookies();
+async function getAuthenticatedUser() {
+  const cookieStore =await cookies();
   const token = cookieStore.get('auth-token');
 
-  if (!token) {
-    return null;
-  }
+  if (!token) return null;
 
   try {
     return jwt.verify(token.value, process.env.JWT_SECRET);
@@ -25,130 +22,33 @@ async function getUser(request) {
 
 export async function GET(request, { params }) {
   try {
-    const user = await getUser(request);
     await connectDB();
+    const user = await getAuthenticatedUser();
     const { courseId } =await params;
 
-    // Convert courseId to ObjectId
-    let courseObjectId;
-    try {
-      courseObjectId = new mongoose.Types.ObjectId(courseId);
-    } catch (error) {
+    // Validate courseId format
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return NextResponse.json(
         { error: 'Invalid course ID format' },
         { status: 400 }
       );
     }
 
-    // Fetch course with populated instructor and reviews
-    const courses = await Course.aggregate([
-      { $match: { _id: courseObjectId } },
-      
-      // Lookup instructor details
-      {
-        $lookup: {
-          from: 'teachers',
-          localField: 'teacherId',
-          foreignField: '_id',
-          as: 'instructor'
-        }
-      },
-      { $unwind: '$instructor' },
-
-      // Lookup review details with student info
-      {
-        $lookup: {
-          from: 'reviews',
-          localField: '_id',
-          foreignField: 'courseId',
-          pipeline: [
-            {
-              $lookup: {
-                from: 'students',
-                localField: 'studentId',
-                foreignField: '_id',
-                pipeline: [
-                  {
-                    $project: {
-                      name: 1,
-                      avatar: 1
-                    }
-                  }
-                ],
-                as: 'student'
-              }
-            },
-            { $unwind: '$student' },
-            {
-              $project: {
-                rating: 1,
-                comment: 1,
-                createdAt: 1,
-                studentName: '$student.name',
-                studentAvatar: '$student.avatar'
-              }
-            }
-          ],
-          as: 'reviews'
-        }
-      },
-
-      // Calculate review statistics
-      {
-        $addFields: {
-          totalRatings: { $size: '$reviews' },
-          rating: {
-            $cond: [
-              { $gt: [{ $size: '$reviews' }, 0] },
-              { $avg: '$reviews.rating' },
-              0
-            ]
-          }
-        }
-      },
-
-      // Project only needed fields
-      {
-        $project: {
-          title: 1,
-          description: 1,
-          thumbnail: 1,
-          previewVideo: 1,
-          price: 1,
-          discountedPrice: 1,
-          level: 1,
-          category: 1,
-          language: 1,
-          objectives: 1,
-          requirements: 1,
-          sections: 1,
-          totalDuration: 1,
-          totalLessons: 1,
-          enrolledStudents: 1,
-          rating: 1,
-          totalRatings: 1,
-          reviews: 1,
-          lastUpdated: 1,
-          moneyBackGuarantee: 1,
-          whoShouldTake: 1,
-          resources: 1,
-          instructor: {
-            _id: 1,
-            name: 1,
-            avatar: 1,
-            title: 1,
-            bio: 1,
-            expertise: 1,
-            rating: 1,
-            coursesCount: 1,
-            studentsCount: 1
-          }
-        }
-      }
-    ]);
-
-    // Get the first (and should be only) course from the aggregation result
-    const course = courses[0];
+    // Fetch course with populated teacher and reviews
+    const course = await Course.findById(courseId)
+      .populate({
+        path: 'teacherId',
+        select: 'name avatar bio expertise'
+      })
+      .populate({
+        path: 'reviews',
+        populate: {
+          path: 'studentId',
+          select: 'name avatar'
+        },
+        options: { limit: 10, sort: { createdAt: -1 } }
+      })
+      .lean();
 
     if (!course) {
       return NextResponse.json(
@@ -157,37 +57,107 @@ export async function GET(request, { params }) {
       );
     }
 
-    // If user is authenticated, check enrollment status
-    let userEnrollment = null;
-    if (user) {
-      userEnrollment = await CourseEnrollment.findOne({
-        courseId: course._id,
-        studentId: user.id
-      }).select('status progress lessonsProgress lastAccessedAt');
+    // Calculate course statistics
+    const stats = {
+      totalDuration: 0,
+      totalLessons: 0,
+      averageRating: 0,
+      totalEnrollments: 0
+    };
+
+    // Calculate totals from sections and lessons
+    if (course.sections) {
+      course.sections.forEach(section => {
+        if (section.lessons) {
+          stats.totalLessons += section.lessons.length;
+          section.lessons.forEach(lesson => {
+            stats.totalDuration += lesson.duration || 0;
+          });
+        }
+      });
     }
 
-    // Format the response
+    // Calculate average rating from reviews
+    if (course.reviews && course.reviews.length > 0) {
+      const totalRating = course.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+      stats.averageRating = Number((totalRating / course.reviews.length).toFixed(1));
+    }
+
+    // Format course data
     const formattedCourse = {
       ...course,
-      // Add preview flags to lessons that should be available for preview
-      sections: Array.isArray(course.sections) ? course.sections.map(section => ({
+      sections: course.sections?.map(section => ({
         ...section,
-        lessons: Array.isArray(section.lessons) ? section.lessons.map((lesson, index) => ({
+        lessons: section.lessons?.map((lesson, index) => ({
           ...lesson,
-          preview: index === 0 || lesson.preview // Make first lesson always previewable
-        })) : []
-      })) : []
+          preview: lesson.preview || index === 0,
+          // Only include videoUrl if user is enrolled or lesson is preview
+          videoUrl: user ? lesson.videoUrl : (lesson.preview || index === 0 ? lesson.videoUrl : null)
+        }))
+      })),
+      teacher: course.teacherId ? {
+        id: course.teacherId._id,
+        name: course.teacherId.name || '',
+        avatar: course.teacherId.avatar || '',
+        bio: course.teacherId.bio || '',
+        expertise: course.teacherId.expertise || []
+      } : null,
+      reviews: course.reviews?.map(review => ({
+        id: review._id,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+        student: {
+          id: review.studentId._id,
+          name: review.studentId.name || '',
+          avatar: review.studentId.avatar || ''
+        }
+      })),
+      stats: {
+        totalDuration: stats.totalDuration,
+        totalLessons: stats.totalLessons,
+        averageRating: stats.averageRating,
+        totalReviews: course.reviews?.length || 0,
+        totalEnrollments: course.enrolledStudents || 0
+      }
     };
+
+    // Remove unnecessary fields
+    delete formattedCourse.teacherId;
+    delete formattedCourse.enrolledStudents;
+
+    // If user is authenticated, fetch their enrollment status
+    let enrollment = null;
+    if (user) {
+      enrollment = await CourseEnrollment.findOne({
+        courseId: courseId,
+        studentId: user.id
+      })
+      .select({
+        status: 1,
+        progress: 1,
+        lessonsProgress: 1,
+        lastAccessedAt: 1,
+        enrolledAt: 1,
+        completedAt: 1,
+        certificate: 1
+      })
+      .lean();
+    }
 
     return NextResponse.json({
       course: formattedCourse,
-      userEnrollment
+      enrollment,
+      success: true
     });
 
   } catch (error) {
     console.error('Error fetching course details:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch course details' },
+      { 
+        error: 'Failed to fetch course details',
+        message: error.message 
+      },
       { status: 500 }
     );
   }

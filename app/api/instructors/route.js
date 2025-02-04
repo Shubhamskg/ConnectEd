@@ -4,38 +4,40 @@ import Teacher from "@/models/Teacher";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const domain = searchParams.get('domain');
+    const department = searchParams.get('department');
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || 'rating';
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 12;
-    const specialty = searchParams.get('specialty');
+    const subjectFilter = searchParams.get('subject');
 
     await connectDB();
 
     // Build query
     let query = { role: 'teacher' };
     
-    // Domain filter
-    if (domain) {
-      query.domains = { $regex: new RegExp(domain, 'i') };
+    // Department filter
+    if (department) {
+      query.department = { $regex: new RegExp(department, 'i') };
     }
     
-    // Specialty filter
-    if (specialty) {
-      query.specialty = { $regex: new RegExp(specialty, 'i') };
+    // Subject filter
+    if (subjectFilter) {
+      query.subjectsToTeach = { $regex: new RegExp(subjectFilter, 'i') };
     }
     
     // Search filter
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
         { bio: { $regex: search, $options: 'i' } },
-        { specialty: { $regex: search, $options: 'i' } }
+        { qualification: { $regex: search, $options: 'i' } },
+        { experience: { $regex: search, $options: 'i' } }
       ];
     }
 
-    // Aggregate pipeline for instructor statistics
+    // Aggregate pipeline for teacher statistics
     const aggregatePipeline = [
       { $match: query },
       {
@@ -76,7 +78,7 @@ export async function GET(request) {
         sortStage = { averageRating: -1 };
         break;
       case 'name':
-        sortStage = { name: 1 };
+        sortStage = { firstName: 1, lastName: 1 };
         break;
       default:
         sortStage = { averageRating: -1 };
@@ -91,43 +93,64 @@ export async function GET(request) {
       {
         $project: {
           _id: 1,
-          name: 1,
-          avatar: 1,
-          specialty: 1,
+          firstName: 1,
+          lastName: 1,
+          email: 1,
+          profileImage: 1,
+          department: 1,
+          qualification: 1,
+          experience: 1,
+          subjectsToTeach: 1,
           bio: 1,
-          domains: 1,
           coursesCount: 1,
           totalStudents: 1,
           averageRating: 1,
+          stats: 1,
           createdAt: 1
         }
       }
     );
 
     // Execute queries
-    const [instructors, totalCount] = await Promise.all([
+    const [teachers, totalCount] = await Promise.all([
       Teacher.aggregate(aggregatePipeline),
       Teacher.countDocuments(query)
     ]);
 
-    // Transform ratings to have max 1 decimal place
-    const transformedInstructors = instructors.map(instructor => ({
-      ...instructor,
-      averageRating: instructor.averageRating ? Number(instructor.averageRating.toFixed(1)) : 0
+    // Transform the data
+    const transformedTeachers = teachers.map(teacher => ({
+      id: teacher._id,
+      firstName: teacher.firstName,
+      lastName: teacher.lastName,
+      name: `${teacher.firstName} ${teacher.lastName}`,
+      email: teacher.email,
+      avatar: teacher.profileImage,
+      department: teacher.department,
+      qualification: teacher.qualification,
+      experience: teacher.experience,
+      subjects: teacher.subjectsToTeach,
+      bio: teacher.bio,
+      stats: {
+        coursesCount: teacher.coursesCount || 0,
+        totalStudents: teacher.totalStudents || 0,
+        averageRating: teacher.averageRating ? Number(teacher.averageRating.toFixed(1)) : 0,
+        ...teacher.stats
+      },
+      createdAt: teacher.createdAt
     }));
 
     return Response.json({
-      instructors: transformedInstructors,
+      teachers: transformedTeachers,
       total: totalCount,
       pages: Math.ceil(totalCount / limit),
       currentPage: page,
       hasMore: page < Math.ceil(totalCount / limit)
     });
-
+    
   } catch (error) {
-    console.error('Instructors fetch error:', error);
+    console.error('Teachers fetch error:', error);
     return Response.json(
-      { message: "Failed to fetch instructors" },
+      { message: "Failed to fetch teachers" },
       { status: 500 }
     );
   }

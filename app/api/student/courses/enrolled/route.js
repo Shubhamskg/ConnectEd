@@ -96,7 +96,7 @@ async function getStudyStreak(studentId) {
 export async function GET(request) {
   try {
     // Get auth token from cookie
-    const cookieStore =await cookies();
+    const cookieStore = await cookies();
     const authToken = cookieStore.get('auth-token');
 
     if (!authToken) {
@@ -140,13 +140,13 @@ export async function GET(request) {
       title: { 'course.title': 1 }
     };
 
-    // Get enrollments with course and instructor details
+    // Get enrollments with course and teacher details
     const enrollments = await CourseEnrollment.find(query)
       .populate({
         path: 'courseId',
         populate: {
           path: 'teacherId',
-          select: 'name avatar'
+          select: 'firstName lastName email profileImage department qualification experience subjectsToTeach'
         }
       })
       .sort(sortOptions[sort])
@@ -160,17 +160,24 @@ export async function GET(request) {
       const course = enrollment.courseId;
       const stats = await calculateCourseStats(enrollment, course);
 
+      const teacher = course.teacherId ? {
+        id: course.teacherId._id.toString(),
+        name: `${course.teacherId.firstName} ${course.teacherId.lastName}`,
+        email: course.teacherId.email,
+        avatar: course.teacherId.profileImage,
+        department: course.teacherId.department,
+        qualification: course.teacherId.qualification,
+        experience: course.teacherId.experience,
+        subjects: course.teacherId.subjectsToTeach
+      } : null;
+
       return {
         id: course._id.toString(),
         enrollmentId: enrollment._id.toString(),
         title: course.title,
         description: course.description,
         thumbnail: course.thumbnail,
-        instructor: {
-          id: course.teacherId._id.toString(),
-          name: course.teacherId.name,
-          avatar: course.teacherId.avatar
-        },
+        teacher,
         progress: Math.round(enrollment.progress),
         status: enrollment.status,
         stats: {
@@ -219,7 +226,25 @@ export async function GET(request) {
       averageProgress: Math.round(
         courses.reduce((sum, course) => sum + course.progress, 0) / courses.length
       ),
-      studyStreak
+      studyStreak,
+      byTeacher: courses.reduce((acc, course) => {
+        if (course.teacher) {
+          const teacherId = course.teacher.id;
+          if (!acc[teacherId]) {
+            acc[teacherId] = {
+              name: course.teacher.name,
+              department: course.teacher.department,
+              courses: 0,
+              completedCourses: 0
+            };
+          }
+          acc[teacherId].courses++;
+          if (course.status === 'completed') {
+            acc[teacherId].completedCourses++;
+          }
+        }
+        return acc;
+      }, {})
     };
 
     return NextResponse.json({

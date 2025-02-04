@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -20,75 +21,109 @@ import {
   Clock,
   Star,
   ChevronRight,
-  Filter,
-  SlidersHorizontal
+  SlidersHorizontal,
+  GraduationCap
 } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
 
-const CourseCard = ({ course }) => (
-  <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-    <div className="relative aspect-video">
-      <img
-        src={course.thumbnail || '/placeholder-course.jpg'}
-        alt={course.title}
-        className="object-cover w-full h-full"
-      />
-      {course.featured && (
-        <div className="absolute top-2 right-2">
-          <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-            Featured
-          </span>
-        </div>
-      )}
-    </div>
-    <CardContent className="p-4">
-      <div className="flex flex-col h-full">
-        <div>
-          <h3 className="font-semibold line-clamp-2 mb-2">{course.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-            {course.description}
-          </p>
-          <div className="flex items-center text-sm text-muted-foreground mb-3">
-            <div className="flex items-center mr-4">
-              <Users className="h-4 w-4 mr-1" />
-              {course.enrolledStudents} students
-            </div>
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {Math.ceil(course.totalDuration / 60)}h
-            </div>
-          </div>
-        </div>
-        <div className="mt-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <img
-                src={course.instructor.avatar || '/placeholder-avatar.jpg'}
-                alt={course.instructor.name}
-                className="h-6 w-6 rounded-full mr-2"
-              />
-              <span className="text-sm">{course.instructor.name}</span>
-            </div>
-            <div className="flex items-center">
-              <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />
-              <span className="text-sm font-medium">{course.rating.toFixed(1)}</span>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-lg font-bold">
-              {course.price === 0 ? 'Free' : `£${course.price}`}
+const CourseCard = ({ course }) => {
+  // Add null checks and default values
+  const {
+    title = '',
+    description = '',
+    thumbnail = '/placeholder-course.jpg',
+    featured = false,
+    enrolledStudents = 0,
+    totalDuration = 0,
+    price = 0,
+    rating = 0,
+    teacher = {}
+  } = course || {};
+
+  // Safely access teacher properties with defaults
+  const {
+    firstName = '',
+    lastName = '',
+    profileImage = '/placeholder-avatar.jpg',
+    department = '',
+    qualification = ''
+  } = teacher || {};
+
+  const teacherName = firstName && lastName ? `${firstName} ${lastName}` : 'Unknown Teacher';
+
+  return (
+    <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+      <div className="relative aspect-video">
+        <img
+          src={thumbnail}
+          alt={title}
+          className="object-cover w-full h-full"
+        />
+        {featured && (
+          <div className="absolute top-2 right-2">
+            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+              Featured
             </span>
-            <Button variant="ghost" size="sm">
-              Learn More
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+          </div>
+        )}
+      </div>
+      <CardContent className="p-4">
+        <div className="flex flex-col h-full">
+          <div>
+            <h3 className="font-semibold line-clamp-2 mb-2">{title}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+              {description}
+            </p>
+            <div className="flex items-center text-sm text-muted-foreground mb-3">
+              <div className="flex items-center mr-4">
+                <Users className="h-4 w-4 mr-1" />
+                {enrolledStudents} students
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-1" />
+                {Math.ceil(totalDuration / 60)}h
+              </div>
+            </div>
+          </div>
+          <div className="mt-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img
+                  src={profileImage}
+                  alt={teacherName}
+                  className="h-6 w-6 rounded-full"
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{teacherName}</span>
+                  {department && (
+                    <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                      <GraduationCap className="h-3 w-3" />
+                      {department}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center">
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />
+                <span className="text-sm font-medium">{rating.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-lg font-bold">
+                {price === 0 ? 'Free' : `£${price}`}
+              </span>
+              <Button variant="ghost" size="sm">
+                Learn More
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+      </CardContent>
+    </Card>
+  );
+};
 
 const SkeletonCard = () => (
   <div className="relative h-[380px]">
@@ -109,27 +144,32 @@ const CourseCatalog = () => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
-  const [totalCourses, setTotalCourses] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCourses: 0
+  });
 
   const [filters, setFilters] = useState({
-    search: searchParams.get('search') || '',
-    category: searchParams.get('category') || 'all',
-    level: searchParams.get('level') || 'all',
-    price: searchParams.get('price') || 'all',
-    sort: searchParams.get('sort') || 'popular'
+    search: searchParams?.get('search') || '',
+    category: searchParams?.get('category') || 'all',
+    level: searchParams?.get('level') || 'all',
+    price: searchParams?.get('price') || 'all',
+    department: searchParams?.get('department') || 'all',
+    sort: searchParams?.get('sort') || 'popular'
   });
+
 
   useEffect(() => {
     fetchCourses();
-  }, [filters, currentPage]);
+  }, [filters, pagination.currentPage]);
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
         ...filters,
-        page: currentPage,
+        page: pagination.currentPage,
         limit: ITEMS_PER_PAGE
       });
 
@@ -137,11 +177,16 @@ const CourseCatalog = () => {
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.message);
-
-      setCourses(data.courses);
-      setTotalCourses(data.total);
+      
+      setCourses(data.courses || []);
+      setPagination(prev => ({
+        ...prev,
+        totalPages: data.pagination.totalPages,
+        totalCourses: data.pagination.totalCourses
+      }));
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -149,10 +194,10 @@ const CourseCatalog = () => {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
     
     // Update URL params
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
     if (value && value !== 'all') {
       newParams.set(key, value);
     } else {
@@ -166,8 +211,6 @@ const CourseCatalog = () => {
       handleFilterChange('search', e.target.value);
     }
   };
-
-  const totalPages = Math.ceil(totalCourses / ITEMS_PER_PAGE);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -237,9 +280,9 @@ const CourseCatalog = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Levels</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
+              <SelectItem value="Beginner">Beginner</SelectItem>
+              <SelectItem value="Intermediate">Intermediate</SelectItem>
+              <SelectItem value="Advanced">Advanced</SelectItem>
             </SelectContent>
           </Select>
 
@@ -258,12 +301,28 @@ const CourseCatalog = () => {
           </Select>
         </div>
       </div>
+       {/* Add department filter */}
+       <Select
+            value={filters.department}
+            onValueChange={(value) => handleFilterChange('department', value)}
+          >
+            <SelectTrigger>
+              <GraduationCap className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              <SelectItem value="medical">Medical</SelectItem>
+              <SelectItem value="dental">Dental</SelectItem>
+              <SelectItem value="nursing">Nursing</SelectItem>
+            </SelectContent>
+          </Select>
 
       {/* Course Grid */}
       {loading ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <SkeletonCard key={i} />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={`skeleton-${i}`} />
           ))}
         </div>
       ) : courses.length > 0 ? (
@@ -280,28 +339,37 @@ const CourseCatalog = () => {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {pagination.totalPages > 1 && (
             <div className="flex justify-center mt-8 gap-2">
               <Button
                 variant="outline"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
+                onClick={() => setPagination(prev => ({
+                  ...prev,
+                  currentPage: Math.max(1, prev.currentPage - 1)
+                }))}
+                disabled={pagination.currentPage === 1}
               >
                 Previous
               </Button>
-              {[...Array(totalPages)].map((_, i) => (
+              {Array.from({ length: pagination.totalPages }).map((_, i) => (
                 <Button
-                  key={i + 1}
-                  variant={currentPage === i + 1 ? "default" : "outline"}
-                  onClick={() => setCurrentPage(i + 1)}
+                  key={`page-${i + 1}`}
+                  variant={pagination.currentPage === i + 1 ? "default" : "outline"}
+                  onClick={() => setPagination(prev => ({
+                    ...prev,
+                    currentPage: i + 1
+                  }))}
                 >
                   {i + 1}
                 </Button>
               ))}
               <Button
                 variant="outline"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => setPagination(prev => ({
+                  ...prev,
+                  currentPage: Math.min(pagination.totalPages, prev.currentPage + 1)
+                }))}
+                disabled={pagination.currentPage === pagination.totalPages}
               >
                 Next
               </Button>

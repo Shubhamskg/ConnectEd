@@ -7,6 +7,7 @@ import Course from "@/models/Course";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import Student from "@/models/Student";
+
 async function verifyAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token');
@@ -25,7 +26,9 @@ async function verifyAuth() {
 
     return {
       id: student._id.toString(),
-      name: student.name,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      name: `${student.firstName} ${student.lastName}`,
       email: student.email,
       role: 'student'
     };
@@ -34,7 +37,6 @@ async function verifyAuth() {
     return null;
   }
 }
-
 
 export async function GET(request) {
   try {
@@ -59,7 +61,7 @@ export async function GET(request) {
       path: 'courseId',
       populate: {
         path: 'teacherId',
-        select: 'name'
+        select: 'firstName lastName email profileImage department qualification experience'
       }
     })
     .sort({ lastAccessedAt: -1 });
@@ -98,11 +100,21 @@ export async function GET(request) {
         if (nextLesson) break;
       }
 
+      const teacher = course.teacherId ? {
+        id: course.teacherId._id,
+        name: `${course.teacherId.firstName} ${course.teacherId.lastName}`,
+        email: course.teacherId.email,
+        avatar: course.teacherId.profileImage,
+        department: course.teacherId.department,
+        qualification: course.teacherId.qualification,
+        experience: course.teacherId.experience
+      } : null;
+
       return {
         id: course._id,
         title: course.title,
         thumbnail: course.thumbnail,
-        instructor: course.teacherId.name,
+        teacher,
         progress: enrollment.progress,
         completedLessons,
         totalLessons,
@@ -114,7 +126,13 @@ export async function GET(request) {
       };
     }));
 
-    return NextResponse.json({ courses });
+    return NextResponse.json({ 
+      courses,
+      summary: {
+        totalActive: courses.length,
+        averageProgress: courses.reduce((sum, course) => sum + course.progress, 0) / courses.length || 0
+      }
+    });
 
   } catch (error) {
     console.error('Error fetching active courses:', error);
