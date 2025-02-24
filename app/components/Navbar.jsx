@@ -371,13 +371,14 @@ export function Navbar() {
                         <Globe className="h-5 w-5 mr-2" />
                         Explore
                       </Link>
-                      <Link href="/auth/teacher/login" className="block py-3 text-gray-700 hover:text-blue-600">
-                        Teach on ConnectEd
-                      </Link>
                       <Link href="/teachers" className="flex items-center py-3 text-gray-700 hover:text-blue-600">
                         <GraduationCap className="h-5 w-5 mr-2" />
                         Our Teachers
                       </Link>
+                      <Link href="/auth/teacher/login" className="block py-3 text-gray-700 hover:text-blue-600">
+                        Teach on ConnectEd
+                      </Link>
+                      
                       
                     </div>
                     <div className="space-y-3">
