@@ -189,6 +189,17 @@ export function Navbar() {
             </Link>
           </Button>
 
+          <Button 
+            variant="ghost" 
+            asChild
+            className="font-medium text-gray-700 hover:text-blue-600 transition-colors"
+          >
+            <Link href="/teachers" className="flex items-center">
+              <GraduationCap className="h-4 w-4 mr-2" />
+              Our Teachers
+            </Link>
+          </Button>
+
           {!user && (
             <Button 
               variant="ghost" 
@@ -363,6 +374,11 @@ export function Navbar() {
                       <Link href="/auth/teacher/login" className="block py-3 text-gray-700 hover:text-blue-600">
                         Teach on ConnectEd
                       </Link>
+                      <Link href="/teachers" className="flex items-center py-3 text-gray-700 hover:text-blue-600">
+                        <GraduationCap className="h-5 w-5 mr-2" />
+                        Our Teachers
+                      </Link>
+                      
                     </div>
                     <div className="space-y-3">
                       <Button
@@ -387,5 +403,4 @@ export function Navbar() {
         </div>
       </nav>
     </header>
-  );
-}
+  )};
