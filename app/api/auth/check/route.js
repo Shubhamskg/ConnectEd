@@ -83,7 +83,7 @@ export async function GET(request) {
       // Check specifically for token expiration
       if (err instanceof jwt.TokenExpiredError) {
         // Clear the auth token cookie
-        const cookieStore = cookies();
+        const cookieStore =await cookies();
         cookieStore.delete('auth-token');
         
         return NextResponse.json(

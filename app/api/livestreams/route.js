@@ -109,6 +109,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const user = await verifyAuth();
+    console.log("user",user)
     if (!user || user.role !== 'teacher') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -177,7 +178,7 @@ export async function POST(req) {
     // Create livestream
     const livestream = new LiveStream({
       teacherId: user.id,
-      teacherName: user.name,
+      // teacherName: user.name,
       title: title.trim(),
       description: description?.trim(),
       type,

@@ -103,7 +103,7 @@ const livestreamSchema = new mongoose.Schema({
   },
   teacherName: {
     type: String,
-    required: true
+    // required: true
   },
   courseId: {
     type: mongoose.Schema.Types.ObjectId,

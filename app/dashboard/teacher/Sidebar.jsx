@@ -89,11 +89,11 @@ const Sidebar = () => {
       label: 'Events', 
       href: '/dashboard/teacher/events' 
     },
-    // { 
-    //   icon: MessageSquare, 
-    //   label: 'Live Classes', 
-    //   href: '/dashboard/teacher/live-stream' 
-    // },
+    { 
+      icon: MessageSquare, 
+      label: 'Live Classes', 
+      href: '/dashboard/teacher/livestreams' 
+    },
     // { 
     //   icon: BarChart, 
     //   label: 'Earnings', 
